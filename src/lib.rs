@@ -8,6 +8,7 @@ pub mod foreign;
 pub mod runtime;
 pub mod test;
 pub mod traits;
+pub mod verifier;
 
 #[macro_use]
 extern crate lazy_static;
