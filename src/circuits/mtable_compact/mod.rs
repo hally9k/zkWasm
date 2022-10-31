@@ -109,42 +109,51 @@ impl<F: FieldExt> MemoryTableChip<F> {
         etable_rest_mops_cell: Option<Cell>,
     ) -> Result<(), Error> {
         assert_eq!(MTABLE_ROWS % (STEP_SIZE as usize), 0);
+        assert_eq!(ctx.start_offset % (STEP_SIZE as usize), 0);
 
         for i in 0..MTABLE_ROWS {
-            ctx.region
-                .assign_fixed(|| "mtable sel", self.config.sel, i, || Ok(F::one()))?;
+            ctx.region.as_ref().borrow_mut().assign_fixed(
+                || "mtable sel",
+                self.config.sel,
+                ctx.offset,
+                || Ok(F::one()),
+            )?;
 
-            if i % (STEP_SIZE as usize) == 0 {
-                ctx.region.assign_fixed(
+            if ctx.offset % (STEP_SIZE as usize) == 0 {
+                ctx.region.as_ref().borrow_mut().assign_fixed(
                     || "block_first_line_sel",
                     self.config.block_first_line_sel,
-                    i,
+                    ctx.offset,
                     || Ok(F::one()),
                 )?;
             }
 
             if i >= STEP_SIZE as usize {
-                ctx.region.assign_fixed(
+                ctx.region.as_ref().borrow_mut().assign_fixed(
                     || "following_block_sel",
                     self.config.following_block_sel,
-                    i,
+                    ctx.offset,
                     || Ok(F::one()),
                 )?;
             }
+
+            ctx.next();
         }
+
+        ctx.reset();
 
         let mut mops = mtable.entries().iter().fold(0, |acc, e| {
             acc + if e.atype == AccessType::Init { 0 } else { 1 }
         });
 
         let mut last_entry: Option<&MemoryTableEntry> = None;
-        for (index, entry) in mtable.entries().iter().enumerate() {
+        for entry in mtable.entries().iter() {
             macro_rules! assign_advice {
                 ($key: expr, $offset: expr, $column: ident, $value: expr) => {
-                    ctx.region.assign_advice(
+                    ctx.region.as_ref().borrow_mut().assign_advice(
                         || $key,
                         self.config.$column,
-                        index * (STEP_SIZE as usize) + ($offset as usize),
+                        ctx.offset + ($offset as usize),
                         || Ok($value),
                     )?
                 };
@@ -154,7 +163,7 @@ impl<F: FieldExt> MemoryTableChip<F> {
                 ($offset: expr, $column: ident) => {
                     self.config.index.assign(
                         ctx,
-                        Some($offset as usize + index * STEP_SIZE as usize),
+                        Some(ctx.offset + $offset as usize),
                         (entry.$column as u64).into(),
                         (F::from(entry.$column as u64)
                             - F::from(
@@ -221,7 +230,7 @@ impl<F: FieldExt> MemoryTableChip<F> {
                 for i in (RotationOfIndexColumn::MAX as i32)..STEP_SIZE {
                     self.config.index.assign(
                         ctx,
-                        Some(index * STEP_SIZE as usize + i as usize),
+                        Some(ctx.offset + i as usize),
                         F::zero(),
                         F::zero(),
                     )?;
@@ -284,8 +293,10 @@ impl<F: FieldExt> MemoryTableChip<F> {
                     aux,
                     F::from(mops)
                 );
-                if index == 0 && etable_rest_mops_cell.is_some() {
+                if ctx.offset == ctx.start_offset && etable_rest_mops_cell.is_some() {
                     ctx.region
+                        .as_ref()
+                        .borrow_mut()
                         .constrain_equal(cell.cell(), etable_rest_mops_cell.unwrap())?;
                 }
             }
@@ -316,30 +327,30 @@ impl<F: FieldExt> MemoryTableChip<F> {
                     F::zero(),
                     -F::from(last_entry.ltype as u64),
                 )?;
-                ctx.offset += 1;
+                ctx.next();
                 self.config
                     .index
                     .assign(ctx, None, F::zero(), -F::from(last_entry.mmid as u64))?;
-                ctx.offset += 1;
+                ctx.next();
                 self.config.index.assign(
                     ctx,
                     None,
                     F::zero(),
                     -F::from(last_entry.offset as u64),
                 )?;
-                ctx.offset += 1;
+                ctx.next();
                 self.config
                     .index
                     .assign(ctx, None, F::zero(), -F::from(last_entry.eid as u64))?;
-                ctx.offset += 1;
+                ctx.next();
                 self.config
                     .index
                     .assign(ctx, None, F::zero(), -F::from(last_entry.emid as u64))?;
-                ctx.offset += 1;
+                ctx.next();
             }
         }
 
-        for i in ctx.offset..MAX_MATBLE_ROWS {
+        for i in ctx.offset..ctx.start_offset + MAX_MATBLE_ROWS {
             self.config
                 .index
                 .assign(ctx, Some(i), F::zero(), F::zero())?;
