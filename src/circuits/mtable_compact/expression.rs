@@ -1,4 +1,3 @@
-use super::configure::STEP_SIZE;
 use super::*;
 use crate::constant_from;
 use crate::curr;
@@ -10,8 +9,7 @@ use halo2_proofs::plonk::VirtualCells;
 
 impl<F: FieldExt> MemoryTableConfig<F> {
     pub(super) fn is_enabled_block(&self, meta: &mut VirtualCells<F>) -> Expression<F> {
-        curr!(meta, self.bit)
-            * fixed_curr!(meta, self.block_first_line_sel)
+        curr!(meta, self.bit) * fixed_curr!(meta, self.block_first_line_sel)
     }
 
     pub(super) fn is_enabled_following_block(&self, meta: &mut VirtualCells<F>) -> Expression<F> {
@@ -84,7 +82,7 @@ impl<F: FieldExt> MemoryTableConfig<F> {
         nextn!(
             meta,
             self.aux,
-            RotationOfAuxColumn::Atype as i32 - STEP_SIZE
+            RotationOfAuxColumn::Atype as i32 - MTABLE_STEP_SIZE
         )
     }
 
@@ -111,11 +109,11 @@ impl<F: FieldExt> MemoryTableConfig<F> {
     }
 
     pub(super) fn prev_value(&self, meta: &mut VirtualCells<F>) -> Expression<F> {
-        let mut acc = self.byte(meta, -STEP_SIZE);
+        let mut acc = self.byte(meta, -MTABLE_STEP_SIZE);
         let mut base = 1u64;
         for i in 1..8 {
             base <<= 8;
-            acc = acc + constant_from!(base) * self.byte(meta, i - STEP_SIZE);
+            acc = acc + constant_from!(base) * self.byte(meta, i - MTABLE_STEP_SIZE);
         }
         acc
     }
@@ -128,7 +126,7 @@ impl<F: FieldExt> MemoryTableConfig<F> {
         nextn!(
             meta,
             self.aux,
-            RotationOfAuxColumn::RestMops as i32 - STEP_SIZE
+            RotationOfAuxColumn::RestMops as i32 - MTABLE_STEP_SIZE
         )
     }
 
@@ -141,7 +139,11 @@ impl<F: FieldExt> MemoryTableConfig<F> {
     }
 
     pub(super) fn prev_is_i64(&self, meta: &mut VirtualCells<F>) -> Expression<F> {
-        nextn!(meta, self.bit, RotationOfBitColumn::Is64Bit as i32 - STEP_SIZE)
+        nextn!(
+            meta,
+            self.bit,
+            RotationOfBitColumn::Is64Bit as i32 - MTABLE_STEP_SIZE
+        )
     }
 
     pub(super) fn is_mutable(&self, meta: &mut VirtualCells<F>) -> Expression<F> {
@@ -149,7 +151,11 @@ impl<F: FieldExt> MemoryTableConfig<F> {
     }
 
     pub(super) fn prev_is_mutable(&self, meta: &mut VirtualCells<F>) -> Expression<F> {
-        nextn!(meta, self.bit, RotationOfBitColumn::IsMutable as i32 - STEP_SIZE)
+        nextn!(
+            meta,
+            self.bit,
+            RotationOfBitColumn::IsMutable as i32 - MTABLE_STEP_SIZE
+        )
     }
 
     pub(super) fn is_stack(&self, meta: &mut VirtualCells<F>) -> Expression<F> {
@@ -157,7 +163,13 @@ impl<F: FieldExt> MemoryTableConfig<F> {
     }
 
     pub(super) fn imtable_selector(&self, meta: &mut VirtualCells<F>, i: u32) -> Expression<F> {
-        assert!((i as u32 + RotationOfBitColumn::IMTableSelectorStart as u32) < STEP_SIZE as u32);
-        nextn!(meta, self.bit, RotationOfBitColumn::IMTableSelectorStart as i32 + i as i32)
+        assert!(
+            (i as u32 + RotationOfBitColumn::IMTableSelectorStart as u32) < MTABLE_STEP_SIZE as u32
+        );
+        nextn!(
+            meta,
+            self.bit,
+            RotationOfBitColumn::IMTableSelectorStart as i32 + i as i32
+        )
     }
 }

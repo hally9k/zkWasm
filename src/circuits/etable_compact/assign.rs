@@ -7,6 +7,8 @@ impl<F: FieldExt> EventTableCommonConfig<F> {
         op_configs: &BTreeMap<OpcodeClassPlain, Rc<Box<dyn EventTableOpcodeConfig<F>>>>,
         etable: &EventTable,
     ) -> Result<(Option<Cell>, Option<Cell>), Error> {
+        const_assert!(MAX_ETABLE_ROWS % ETABLE_STEP_SIZE == 0);
+
         let mut status_entries = Vec::with_capacity(etable.entries().len() + 1);
 
         // Step 1: fill fixed columns

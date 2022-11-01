@@ -63,7 +63,7 @@ pub mod op_configure;
 // 1. add constraints for termination
 // 2. add input output for circuits
 
-const ETABLE_STEP_SIZE: usize = 20usize;
+pub const ETABLE_STEP_SIZE: usize = 20usize;
 const U4_COLUMNS: usize = 3usize;
 const U8_COLUMNS: usize = 2usize;
 const BITS_COLUMNS: usize = 2usize;

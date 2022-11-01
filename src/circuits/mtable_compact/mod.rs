@@ -1,10 +1,11 @@
 use self::configure::MemoryTableConstriants;
-use super::config::MAX_MATBLE_ROWS;
+
 use super::imtable::InitMemoryTableConfig;
 use super::rtable::RangeTableConfig;
 use super::utils::row_diff::RowDiffConfig;
 use super::utils::Context;
-use crate::circuits::mtable_compact::configure::STEP_SIZE;
+use crate::circuits::config::MAX_MTABLE_ROWS;
+use crate::circuits::mtable_compact::configure::MTABLE_STEP_SIZE;
 use crate::circuits::IMTABLE_COLOMNS;
 use halo2_proofs::arithmetic::FieldExt;
 use halo2_proofs::circuit::Cell;
@@ -19,8 +20,6 @@ use specs::mtable::MTable;
 use specs::mtable::MemoryTableEntry;
 use specs::mtable::VarType;
 use std::marker::PhantomData;
-
-const MTABLE_ROWS: usize = MAX_MATBLE_ROWS / STEP_SIZE as usize * STEP_SIZE as usize;
 
 pub mod configure;
 pub(crate) mod encode;
@@ -108,10 +107,10 @@ impl<F: FieldExt> MemoryTableChip<F> {
         mtable: &MTable,
         etable_rest_mops_cell: Option<Cell>,
     ) -> Result<(), Error> {
-        assert_eq!(MTABLE_ROWS % (STEP_SIZE as usize), 0);
-        assert_eq!(ctx.start_offset % (STEP_SIZE as usize), 0);
+        assert_eq!(MAX_MTABLE_ROWS % (MTABLE_STEP_SIZE as usize), 0);
+        assert_eq!(ctx.start_offset % (MTABLE_STEP_SIZE as usize), 0);
 
-        for i in 0..MTABLE_ROWS {
+        for i in 0..MAX_MTABLE_ROWS {
             ctx.region.as_ref().borrow_mut().assign_fixed(
                 || "mtable sel",
                 self.config.sel,
@@ -119,7 +118,7 @@ impl<F: FieldExt> MemoryTableChip<F> {
                 || Ok(F::one()),
             )?;
 
-            if ctx.offset % (STEP_SIZE as usize) == 0 {
+            if ctx.offset % (MTABLE_STEP_SIZE as usize) == 0 {
                 ctx.region.as_ref().borrow_mut().assign_fixed(
                     || "block_first_line_sel",
                     self.config.block_first_line_sel,
@@ -128,7 +127,7 @@ impl<F: FieldExt> MemoryTableChip<F> {
                 )?;
             }
 
-            if i >= STEP_SIZE as usize {
+            if i >= MTABLE_STEP_SIZE as usize {
                 ctx.region.as_ref().borrow_mut().assign_fixed(
                     || "following_block_sel",
                     self.config.following_block_sel,
@@ -227,7 +226,7 @@ impl<F: FieldExt> MemoryTableChip<F> {
                 assign_row_diff!(RotationOfIndexColumn::EID, eid);
                 assign_row_diff!(RotationOfIndexColumn::EMID, emid);
 
-                for i in (RotationOfIndexColumn::MAX as i32)..STEP_SIZE {
+                for i in (RotationOfIndexColumn::MAX as i32)..MTABLE_STEP_SIZE {
                     self.config.index.assign(
                         ctx,
                         Some(ctx.offset + i as usize),
@@ -315,7 +314,7 @@ impl<F: FieldExt> MemoryTableChip<F> {
             }
 
             last_entry = Some(entry);
-            ctx.offset += STEP_SIZE as usize;
+            ctx.offset += MTABLE_STEP_SIZE as usize;
         }
 
         match last_entry {
@@ -350,7 +349,7 @@ impl<F: FieldExt> MemoryTableChip<F> {
             }
         }
 
-        for i in ctx.offset..ctx.start_offset + MAX_MATBLE_ROWS {
+        for i in ctx.offset..ctx.start_offset + MAX_MTABLE_ROWS {
             self.config
                 .index
                 .assign(ctx, Some(i), F::zero(), F::zero())?;

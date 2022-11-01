@@ -13,7 +13,7 @@ use halo2_proofs::plonk::ConstraintSystem;
 use specs::mtable::AccessType;
 use specs::mtable::LocationType;
 
-pub const STEP_SIZE: i32 = 8;
+pub const MTABLE_STEP_SIZE: i32 = 8;
 
 pub trait MemoryTableConstriants<F: FieldExt> {
     fn configure(
@@ -90,7 +90,7 @@ impl<F: FieldExt> MemoryTableConstriants<F> for MemoryTableConfig<F> {
             "mtable enable seq must be seq of 1s followed by seq of 0s",
             |meta| {
                 vec![
-                    nextn!(meta, self.bit, STEP_SIZE)
+                    nextn!(meta, self.bit, MTABLE_STEP_SIZE)
                         * (curr!(meta, self.bit) - constant_from!(1))
                         * fixed_curr!(meta, self.sel)
                         * fixed_curr!(meta, self.block_first_line_sel),
@@ -113,7 +113,7 @@ impl<F: FieldExt> MemoryTableConstriants<F> for MemoryTableConfig<F> {
         });
 
         rtable.configure_in_common_range(meta, "mtable configure_index_sort", |meta| {
-            (curr!(meta, self.index.data) - nextn!(meta, self.index.data, -STEP_SIZE))
+            (curr!(meta, self.index.data) - nextn!(meta, self.index.data, -MTABLE_STEP_SIZE))
                 * curr!(meta, self.aux)
                 * self.is_enabled_following_block(meta)
         });
@@ -389,9 +389,10 @@ impl<F: FieldExt> MemoryTableConfig<F> {
         let following_block_sel = meta.fixed_column();
         let block_first_line_sel = meta.fixed_column();
         let bit = cols.next().unwrap();
-        let index = RowDiffConfig::configure("mtable index", meta, cols, STEP_SIZE, |meta| {
-            fixed_curr!(meta, following_block_sel)
-        });
+        let index =
+            RowDiffConfig::configure("mtable index", meta, cols, MTABLE_STEP_SIZE, |meta| {
+                fixed_curr!(meta, following_block_sel)
+            });
         let aux = cols.next().unwrap();
         let bytes = cols.next().unwrap();
 
