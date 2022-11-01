@@ -1,11 +1,11 @@
 use super::JumpTableConfig;
 use crate::{
-    circuits::{rtable::RangeTableConfig, Lookup},
-    constant_from, fixed_curr,
+    circuits::{rtable::RangeTableConfig, shared_columns_pool::TableSelectorColumn, Lookup},
+    constant_from,
 };
 use halo2_proofs::{
     arithmetic::FieldExt,
-    plonk::{Advice, Column, ConstraintSystem, Expression, Fixed, VirtualCells},
+    plonk::{Advice, Column, ConstraintSystem, Expression, VirtualCells},
 };
 
 pub trait JTableConstraint<F: FieldExt> {
@@ -37,7 +37,7 @@ impl<F: FieldExt> JTableConstraint<F> for JumpTableConfig<F> {
             vec![
                 self.enable(meta)
                     * (self.enable(meta) - constant_from!(1))
-                    * fixed_curr!(meta, self.sel),
+                    * self.sel.is_enable_jtable_entry(meta),
             ]
         });
     }
@@ -47,10 +47,10 @@ impl<F: FieldExt> JTableConstraint<F> for JumpTableConfig<F> {
             vec![
                 (self.rest(meta) - self.next_rest(meta) - constant_from!(2))
                     * self.enable(meta)
-                    * fixed_curr!(meta, self.sel),
+                    * self.sel.is_enable_jtable_entry(meta),
                 (self.rest(meta) - self.next_rest(meta))
                     * (self.enable(meta) - constant_from!(1))
-                    * fixed_curr!(meta, self.sel),
+                    * self.sel.is_enable_jtable_entry(meta),
             ]
         });
     }
@@ -61,7 +61,7 @@ impl<F: FieldExt> JTableConstraint<F> for JumpTableConfig<F> {
         rtable: &RangeTableConfig<F>,
     ) {
         rtable.configure_in_common_range(meta, "jtable rest in common range", |meta| {
-            self.rest(meta) * fixed_curr!(meta, self.sel)
+            self.rest(meta) * self.sel.is_enable_jtable_entry_bit(meta)
         });
     }
 }
@@ -76,18 +76,18 @@ impl<F: FieldExt> Lookup<F> for JumpTableConfig<F> {
         meta.lookup_any(key, |meta| {
             vec![(
                 expr(meta),
-                self.entry(meta) * self.enable(meta) * fixed_curr!(meta, self.sel),
+                self.entry(meta) * self.enable(meta) * self.sel.is_enable_jtable_entry_bit(meta),
             )]
         });
     }
 
     fn encode(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
-        self.entry(meta) * self.enable(meta) * fixed_curr!(meta, self.sel)
+        self.entry(meta) * self.enable(meta) * self.sel.is_enable_jtable_entry_bit(meta)
     }
 }
 
 impl<F: FieldExt> JumpTableConfig<F> {
-    pub(super) fn new(sel: Column<Fixed>, data: Column<Advice>) -> Self {
+    pub(super) fn new(sel: TableSelectorColumn<F>, data: Column<Advice>) -> Self {
         JumpTableConfig {
             sel,
             data,

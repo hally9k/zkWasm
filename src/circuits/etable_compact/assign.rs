@@ -1,3 +1,5 @@
+use crate::circuits::shared_columns_pool::SharedColumnTableSelector;
+
 use super::*;
 
 impl<F: FieldExt> EventTableCommonConfig<F> {
@@ -13,12 +15,8 @@ impl<F: FieldExt> EventTableCommonConfig<F> {
 
         // Step 1: fill fixed columns
         for _ in 0..MAX_ETABLE_ROWS {
-            ctx.region.as_ref().borrow_mut().assign_fixed(
-                || "etable common sel",
-                self.sel,
-                ctx.offset,
-                || Ok(F::one()),
-            )?;
+            self.sel
+                .assign(ctx, SharedColumnTableSelector::ExecutionTable)?;
 
             if ctx.offset % ETABLE_STEP_SIZE == EventTableBitColumnRotation::Enable as usize {
                 ctx.region.as_ref().borrow_mut().assign_fixed(

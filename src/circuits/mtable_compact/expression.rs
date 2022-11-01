@@ -19,7 +19,11 @@ impl<F: FieldExt> MemoryTableConfig<F> {
     }
 
     pub(super) fn is_enabled_line(&self, meta: &mut VirtualCells<F>) -> Expression<F> {
-        fixed_curr!(meta, self.sel)
+        self.sel.is_enable_mtable_entry(meta)
+    }
+
+    pub(super) fn is_enabled_line_normalize(&self, meta: &mut VirtualCells<F>) -> Expression<F> {
+        self.sel.is_enable_mtable_entry_bit(meta)
     }
 
     pub(super) fn same_ltype_single(&self, meta: &mut VirtualCells<F>) -> Expression<F> {

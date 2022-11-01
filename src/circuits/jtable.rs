@@ -1,6 +1,9 @@
+use crate::circuits::shared_columns_pool::SharedColumnTableSelector;
+
 use self::configure::JTableConstraint;
 use super::config::MAX_JATBLE_ROWS;
 use super::rtable::RangeTableConfig;
+use super::shared_columns_pool::TableSelectorColumn;
 use super::utils::bn_to_field;
 use super::utils::Context;
 use super::SharedColumns;
@@ -10,7 +13,6 @@ use halo2_proofs::plonk::Advice;
 use halo2_proofs::plonk::Column;
 use halo2_proofs::plonk::ConstraintSystem;
 use halo2_proofs::plonk::Error;
-use halo2_proofs::plonk::Fixed;
 use specs::jtable::JumpTableEntry;
 use std::marker::PhantomData;
 
@@ -29,7 +31,7 @@ const JTABLE_ROWS: usize = MAX_JATBLE_ROWS / JtableOffset::JtableOffsetMax as us
 
 #[derive(Clone)]
 pub struct JumpTableConfig<F: FieldExt> {
-    sel: Column<Fixed>,
+    sel: TableSelectorColumn<F>,
     data: Column<Advice>,
     _m: PhantomData<F>,
 }
@@ -37,7 +39,7 @@ pub struct JumpTableConfig<F: FieldExt> {
 impl<F: FieldExt> JumpTableConfig<F> {
     pub fn configure(
         meta: &mut ConstraintSystem<F>,
-        shared_column_pool: &SharedColumns,
+        shared_column_pool: &SharedColumns<F>,
         rtable: &RangeTableConfig<F>,
     ) -> Self {
         let jtable = Self::new(
@@ -71,12 +73,9 @@ impl<F: FieldExt> JumpTableChip<F> {
 
         for _ in 0..JTABLE_ROWS {
             if (ctx.offset as u32) % (JtableOffset::JtableOffsetMax as u32) == 0 {
-                ctx.region.as_ref().borrow_mut().assign_fixed(
-                    || "jtable sel",
-                    self.config.sel,
-                    ctx.offset,
-                    || Ok(F::one()),
-                )?;
+                self.config
+                    .sel
+                    .assign(ctx, SharedColumnTableSelector::FrameTable)?;
             }
 
             ctx.next();

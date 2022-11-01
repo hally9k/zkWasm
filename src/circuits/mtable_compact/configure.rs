@@ -65,7 +65,7 @@ pub trait MemoryTableConstriants<F: FieldExt> {
 impl<F: FieldExt> MemoryTableConstriants<F> for MemoryTableConfig<F> {
     fn configure_encode_range(&self, meta: &mut ConstraintSystem<F>, rtable: &RangeTableConfig<F>) {
         rtable.configure_in_common_range(meta, "mtable encode in common range", |meta| {
-            curr!(meta, self.aux) * self.is_enabled_line(meta)
+            curr!(meta, self.aux) * self.is_enabled_line_normalize(meta)
         })
     }
 
@@ -78,7 +78,7 @@ impl<F: FieldExt> MemoryTableConstriants<F> for MemoryTableConfig<F> {
             vec![
                 curr!(meta, self.bit)
                     * (curr!(meta, self.bit) - constant_from!(1))
-                    * fixed_curr!(meta, self.sel),
+                    * self.is_enabled_line(meta),
             ]
         });
     }
@@ -90,7 +90,7 @@ impl<F: FieldExt> MemoryTableConstriants<F> for MemoryTableConfig<F> {
                 vec![
                     nextn!(meta, self.bit, MTABLE_STEP_SIZE)
                         * (curr!(meta, self.bit) - constant_from!(1))
-                        * fixed_curr!(meta, self.sel)
+                        * self.is_enabled_line(meta)
                         * fixed_curr!(meta, self.block_first_line_sel),
                 ]
             },
@@ -117,7 +117,7 @@ impl<F: FieldExt> MemoryTableConstriants<F> for MemoryTableConfig<F> {
         });
 
         rtable.configure_in_common_range(meta, "mtable configure_index_sort", |meta| {
-            curr!(meta, self.index.data) * self.is_enabled_line(meta)
+            curr!(meta, self.index.data) * self.is_enabled_line_normalize(meta)
         });
     }
 
@@ -301,7 +301,7 @@ impl<F: FieldExt> MemoryTableConstriants<F> for MemoryTableConfig<F> {
 
     fn configure_tvalue_bytes(&self, meta: &mut ConstraintSystem<F>, rtable: &RangeTableConfig<F>) {
         rtable.configure_in_u8_range(meta, "mtable bytes", |meta| {
-            curr!(meta, self.bytes) * self.is_enabled_line(meta)
+            curr!(meta, self.bytes) * self.is_enabled_line_normalize(meta)
         });
 
         meta.create_gate("mtable byte mask consistent", |meta| {
@@ -379,10 +379,13 @@ impl<F: FieldExt> Lookup<F> for MemoryTableConfig<F> {
 }
 
 impl<F: FieldExt> MemoryTableConfig<F> {
-    pub(super) fn new(meta: &mut ConstraintSystem<F>, shared_columns_pool: &SharedColumns) -> Self {
+    pub(super) fn new(
+        meta: &mut ConstraintSystem<F>,
+        shared_columns_pool: &SharedColumns<F>,
+    ) -> Self {
         let mut cols = shared_columns_pool.advices_iter();
 
-        let sel = meta.fixed_column();
+        let sel = shared_columns_pool.get_table_selector();
         let following_block_sel = meta.fixed_column();
         let block_first_line_sel = meta.fixed_column();
         let bit = cols.next().unwrap();

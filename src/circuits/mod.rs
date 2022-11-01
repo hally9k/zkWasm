@@ -6,6 +6,7 @@ use self::{
     etable_compact::{EventTableChip, EventTableConfig},
     jtable::{JumpTableChip, JumpTableConfig},
     mtable_compact::{MemoryTableChip, MemoryTableConfig},
+    shared_columns_pool::SharedColumns,
 };
 use crate::{
     circuits::{
@@ -33,9 +34,8 @@ use halo2_proofs::{
     circuit::{Layouter, SimpleFloorPlanner},
     pairing::bn256::{Bn256, Fr, G1Affine},
     plonk::{
-        create_proof, keygen_pk, keygen_vk, verify_proof, Advice, Circuit, Column,
-        ConstraintSystem, Error, Expression, Fixed, ProvingKey, SingleVerifier, VerifyingKey,
-        VirtualCells,
+        create_proof, keygen_pk, keygen_vk, verify_proof, Circuit, ConstraintSystem, Error,
+        Expression, ProvingKey, SingleVerifier, VerifyingKey, VirtualCells,
     },
     poly::commitment::{Params, ParamsVerifier},
     transcript::{Blake2bRead, Blake2bWrite, Challenge255},
@@ -49,7 +49,6 @@ use specs::{
 };
 use static_assertions::const_assert;
 use std::{
-    array::IntoIter,
     borrow::BorrowMut,
     cell::RefCell,
     collections::{BTreeMap, BTreeSet},
@@ -67,40 +66,12 @@ pub mod itable;
 pub mod jtable;
 pub mod mtable_compact;
 pub mod rtable;
+pub mod shared_columns_pool;
 pub mod utils;
 
 pub(crate) trait FromBn {
     fn zero() -> Self;
     fn from_bn(bn: &BigUint) -> Self;
-}
-
-const SHARED_ADVICE_COLUMN: usize = 12;
-
-pub struct SharedColumns {
-    advices: [Column<Advice>; SHARED_ADVICE_COLUMN],
-
-    /// Indicate the different types of rows
-    /// 1 for etable,
-    /// 2 for mtable,
-    /// 3 for frame table
-    table_selector: Column<Fixed>,
-}
-
-impl SharedColumns {
-    fn new<F: FieldExt>(meta: &mut ConstraintSystem<F>) -> Self {
-        SharedColumns {
-            advices: [(); SHARED_ADVICE_COLUMN].map(|_| meta.advice_column()),
-            table_selector: meta.fixed_column(),
-        }
-    }
-
-    fn advices_iter(&self) -> IntoIter<Column<Advice>, SHARED_ADVICE_COLUMN> {
-        self.advices.into_iter()
-    }
-
-    pub fn get_table_selector(&self) -> Column<Fixed> {
-        self.table_selector
-    }
 }
 
 #[derive(Clone)]
@@ -176,7 +147,7 @@ impl<F: FieldExt> Circuit<F> for TestCircuit<F> {
         meta.enable_constant(constants);
         meta.enable_equality(constants);
 
-        let shared_columns_pool = SharedColumns::new(meta);
+        let shared_columns_pool = SharedColumns::<F>::new(meta);
 
         let rtable = RangeTableConfig::configure([0; 7].map(|_| meta.lookup_table_column()));
         let itable = InstructionTableConfig::configure(meta.lookup_table_column());

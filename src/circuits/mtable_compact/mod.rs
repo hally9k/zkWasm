@@ -2,11 +2,13 @@ use self::configure::MemoryTableConstriants;
 
 use super::imtable::InitMemoryTableConfig;
 use super::rtable::RangeTableConfig;
+use super::shared_columns_pool::TableSelectorColumn;
 use super::utils::row_diff::RowDiffConfig;
 use super::utils::Context;
 use super::SharedColumns;
 use crate::circuits::config::MAX_MTABLE_ROWS;
 use crate::circuits::mtable_compact::configure::MTABLE_STEP_SIZE;
+use crate::circuits::shared_columns_pool::SharedColumnTableSelector;
 use crate::circuits::IMTABLE_COLOMNS;
 use halo2_proofs::arithmetic::FieldExt;
 use halo2_proofs::circuit::Cell;
@@ -57,7 +59,7 @@ pub enum RotationOfBitColumn {
 
 #[derive(Clone)]
 pub struct MemoryTableConfig<F: FieldExt> {
-    pub(crate) sel: Column<Fixed>,
+    pub(crate) sel: TableSelectorColumn<F>,
     pub(crate) following_block_sel: Column<Fixed>,
     pub(crate) block_first_line_sel: Column<Fixed>,
 
@@ -78,7 +80,7 @@ pub struct MemoryTableConfig<F: FieldExt> {
 impl<F: FieldExt> MemoryTableConfig<F> {
     pub fn configure(
         meta: &mut ConstraintSystem<F>,
-        shared_column_pool: &SharedColumns,
+        shared_column_pool: &SharedColumns<F>,
         rtable: &RangeTableConfig<F>,
         imtable: &InitMemoryTableConfig<F>,
     ) -> Self {
@@ -112,12 +114,9 @@ impl<F: FieldExt> MemoryTableChip<F> {
         assert_eq!(ctx.start_offset % (MTABLE_STEP_SIZE as usize), 0);
 
         for i in 0..MAX_MTABLE_ROWS {
-            ctx.region.as_ref().borrow_mut().assign_fixed(
-                || "mtable sel",
-                self.config.sel,
-                ctx.offset,
-                || Ok(F::one()),
-            )?;
+            self.config
+                .sel
+                .assign(ctx, SharedColumnTableSelector::MemoryTable)?;
 
             if ctx.offset % (MTABLE_STEP_SIZE as usize) == 0 {
                 ctx.region.as_ref().borrow_mut().assign_fixed(
