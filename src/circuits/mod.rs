@@ -34,7 +34,7 @@ use halo2_proofs::{
     pairing::bn256::{Bn256, Fr, G1Affine},
     plonk::{
         create_proof, keygen_pk, keygen_vk, verify_proof, Advice, Circuit, Column,
-        ConstraintSystem, Error, Expression, ProvingKey, SingleVerifier, VerifyingKey,
+        ConstraintSystem, Error, Expression, Fixed, ProvingKey, SingleVerifier, VerifyingKey,
         VirtualCells,
     },
     poly::commitment::{Params, ParamsVerifier},
@@ -76,19 +76,30 @@ pub(crate) trait FromBn {
 
 const SHARED_ADVICE_COLUMN: usize = 12;
 
-struct SharedColumns {
+pub struct SharedColumns {
     advices: [Column<Advice>; SHARED_ADVICE_COLUMN],
+
+    /// Indicate the different types of rows
+    /// 1 for etable,
+    /// 2 for mtable,
+    /// 3 for frame table
+    table_selector: Column<Fixed>,
 }
 
 impl SharedColumns {
     fn new<F: FieldExt>(meta: &mut ConstraintSystem<F>) -> Self {
         SharedColumns {
             advices: [(); SHARED_ADVICE_COLUMN].map(|_| meta.advice_column()),
+            table_selector: meta.fixed_column(),
         }
     }
 
     fn advices_iter(&self) -> IntoIter<Column<Advice>, SHARED_ADVICE_COLUMN> {
         self.advices.into_iter()
+    }
+
+    pub fn get_table_selector(&self) -> Column<Fixed> {
+        self.table_selector
     }
 }
 
@@ -165,21 +176,15 @@ impl<F: FieldExt> Circuit<F> for TestCircuit<F> {
         meta.enable_constant(constants);
         meta.enable_equality(constants);
 
-        //let mut cols = [(); VAR_COLUMNS].map(|_| meta.advice_column()).into_iter();
-        let shared_columns = SharedColumns::new(meta);
+        let shared_columns_pool = SharedColumns::new(meta);
 
         let rtable = RangeTableConfig::configure([0; 7].map(|_| meta.lookup_table_column()));
         let itable = InstructionTableConfig::configure(meta.lookup_table_column());
         let imtable = InitMemoryTableConfig::configure(
             [0; IMTABLE_COLOMNS].map(|_| meta.lookup_table_column()),
         );
-        let mtable = MemoryTableConfig::configure(
-            meta,
-            &mut shared_columns.advices_iter(),
-            &rtable,
-            &imtable,
-        );
-        let jtable = JumpTableConfig::configure(meta, &mut shared_columns.advices_iter(), &rtable);
+        let mtable = MemoryTableConfig::configure(meta, &shared_columns_pool, &rtable, &imtable);
+        let jtable = JumpTableConfig::configure(meta, &shared_columns_pool, &rtable);
 
         let wasm_input_helper_table = WasmInputHelperTableConfig::configure(meta, &rtable);
         let sha256_helper_table = Sha256HelperTableConfig::configure(meta, &rtable);
@@ -196,7 +201,7 @@ impl<F: FieldExt> Circuit<F> for TestCircuit<F> {
 
         let etable = EventTableConfig::configure(
             meta,
-            &mut shared_columns.advices_iter(),
+            &shared_columns_pool,
             &rtable,
             &itable,
             &mtable,

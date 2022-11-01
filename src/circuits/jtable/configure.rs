@@ -5,7 +5,7 @@ use crate::{
 };
 use halo2_proofs::{
     arithmetic::FieldExt,
-    plonk::{Advice, Column, ConstraintSystem, Expression, VirtualCells},
+    plonk::{Advice, Column, ConstraintSystem, Expression, Fixed, VirtualCells},
 };
 
 pub trait JTableConstraint<F: FieldExt> {
@@ -87,13 +87,7 @@ impl<F: FieldExt> Lookup<F> for JumpTableConfig<F> {
 }
 
 impl<F: FieldExt> JumpTableConfig<F> {
-    pub(super) fn new(
-        meta: &mut ConstraintSystem<F>,
-        cols: &mut impl Iterator<Item = Column<Advice>>,
-    ) -> Self {
-        let sel = meta.fixed_column();
-        let data = cols.next().unwrap();
-
+    pub(super) fn new(sel: Column<Fixed>, data: Column<Advice>) -> Self {
         JumpTableConfig {
             sel,
             data,

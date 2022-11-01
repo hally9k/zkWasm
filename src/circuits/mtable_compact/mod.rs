@@ -4,6 +4,7 @@ use super::imtable::InitMemoryTableConfig;
 use super::rtable::RangeTableConfig;
 use super::utils::row_diff::RowDiffConfig;
 use super::utils::Context;
+use super::SharedColumns;
 use crate::circuits::config::MAX_MTABLE_ROWS;
 use crate::circuits::mtable_compact::configure::MTABLE_STEP_SIZE;
 use crate::circuits::IMTABLE_COLOMNS;
@@ -77,11 +78,11 @@ pub struct MemoryTableConfig<F: FieldExt> {
 impl<F: FieldExt> MemoryTableConfig<F> {
     pub fn configure(
         meta: &mut ConstraintSystem<F>,
-        cols: &mut impl Iterator<Item = Column<Advice>>,
+        shared_column_pool: &SharedColumns,
         rtable: &RangeTableConfig<F>,
         imtable: &InitMemoryTableConfig<F>,
     ) -> Self {
-        let mtconfig = Self::new(meta, cols);
+        let mtconfig = Self::new(meta, shared_column_pool);
         meta.enable_equality(mtconfig.aux);
         mtconfig.configure(meta, rtable, imtable);
         mtconfig

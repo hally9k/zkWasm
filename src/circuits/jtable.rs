@@ -3,6 +3,7 @@ use super::config::MAX_JATBLE_ROWS;
 use super::rtable::RangeTableConfig;
 use super::utils::bn_to_field;
 use super::utils::Context;
+use super::SharedColumns;
 use halo2_proofs::arithmetic::FieldExt;
 use halo2_proofs::circuit::Cell;
 use halo2_proofs::plonk::Advice;
@@ -36,10 +37,13 @@ pub struct JumpTableConfig<F: FieldExt> {
 impl<F: FieldExt> JumpTableConfig<F> {
     pub fn configure(
         meta: &mut ConstraintSystem<F>,
-        cols: &mut impl Iterator<Item = Column<Advice>>,
+        shared_column_pool: &SharedColumns,
         rtable: &RangeTableConfig<F>,
     ) -> Self {
-        let jtable = Self::new(meta, cols);
+        let jtable = Self::new(
+            shared_column_pool.get_table_selector(),
+            shared_column_pool.advices_iter().next().unwrap(),
+        );
         jtable.configure(meta, rtable);
         jtable
     }
