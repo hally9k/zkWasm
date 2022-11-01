@@ -1,11 +1,11 @@
 use super::JumpTableConfig;
 use crate::{
-    circuits::{rtable::RangeTableConfig, Lookup},
+    circuits::{rtable::RangeTableConfig, Lookup, SharedColumns},
     constant_from, fixed_curr,
 };
 use halo2_proofs::{
     arithmetic::FieldExt,
-    plonk::{Advice, Column, ConstraintSystem, Expression, VirtualCells},
+    plonk::{ConstraintSystem, Expression, VirtualCells},
 };
 
 pub trait JTableConstraint<F: FieldExt> {
@@ -87,12 +87,9 @@ impl<F: FieldExt> Lookup<F> for JumpTableConfig<F> {
 }
 
 impl<F: FieldExt> JumpTableConfig<F> {
-    pub(super) fn new(
-        meta: &mut ConstraintSystem<F>,
-        cols: &mut impl Iterator<Item = Column<Advice>>,
-    ) -> Self {
+    pub(super) fn new(meta: &mut ConstraintSystem<F>, cols: SharedColumns) -> Self {
         let sel = meta.fixed_column();
-        let data = cols.next().unwrap();
+        let data = cols.advices_iter().next().unwrap();
 
         JumpTableConfig {
             sel,

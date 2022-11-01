@@ -33,8 +33,9 @@ use halo2_proofs::{
     circuit::{Layouter, SimpleFloorPlanner},
     pairing::bn256::{Bn256, Fr, G1Affine},
     plonk::{
-        create_proof, keygen_pk, keygen_vk, verify_proof, Circuit, ConstraintSystem, Error,
-        Expression, ProvingKey, SingleVerifier, VerifyingKey, VirtualCells,
+        create_proof, keygen_pk, keygen_vk, verify_proof, Advice, Circuit, Column,
+        ConstraintSystem, Error, Expression, ProvingKey, SingleVerifier, VerifyingKey,
+        VirtualCells,
     },
     poly::commitment::{Params, ParamsVerifier},
     transcript::{Blake2bRead, Blake2bWrite, Challenge255},
@@ -48,6 +49,7 @@ use specs::{
 };
 use static_assertions::const_assert;
 use std::{
+    array::IntoIter,
     borrow::BorrowMut,
     cell::RefCell,
     collections::{BTreeMap, BTreeSet},
@@ -70,6 +72,24 @@ pub mod utils;
 pub(crate) trait FromBn {
     fn zero() -> Self;
     fn from_bn(bn: &BigUint) -> Self;
+}
+
+const SHARED_ADVICE_COLUMN: usize = 1;
+
+pub struct SharedColumns {
+    advices: [Column<Advice>; SHARED_ADVICE_COLUMN],
+}
+
+impl SharedColumns {
+    pub fn new<F: FieldExt>(meta: &mut ConstraintSystem<F>) -> Self {
+        SharedColumns {
+            advices: [(); SHARED_ADVICE_COLUMN].map(|_| meta.advice_column()),
+        }
+    }
+
+    pub fn advices_iter(&self) -> IntoIter<Column<Advice>, SHARED_ADVICE_COLUMN> {
+        self.advices.into_iter()
+    }
 }
 
 #[derive(Clone)]
@@ -146,6 +166,7 @@ impl<F: FieldExt> Circuit<F> for TestCircuit<F> {
         meta.enable_equality(constants);
 
         let mut cols = [(); VAR_COLUMNS].map(|_| meta.advice_column()).into_iter();
+        let shared_columns = SharedColumns::new(meta);
 
         let rtable = RangeTableConfig::configure([0; 7].map(|_| meta.lookup_table_column()));
         let itable = InstructionTableConfig::configure(meta.lookup_table_column());
@@ -153,7 +174,7 @@ impl<F: FieldExt> Circuit<F> for TestCircuit<F> {
             [0; IMTABLE_COLOMNS].map(|_| meta.lookup_table_column()),
         );
         let mtable = MemoryTableConfig::configure(meta, &mut cols, &rtable, &imtable);
-        let jtable = JumpTableConfig::configure(meta, &mut cols, &rtable);
+        let jtable = JumpTableConfig::configure(meta, shared_columns, &rtable);
 
         let wasm_input_helper_table = WasmInputHelperTableConfig::configure(meta, &rtable);
         let sha256_helper_table = Sha256HelperTableConfig::configure(meta, &rtable);
