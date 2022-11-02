@@ -6,7 +6,8 @@ impl<F: FieldExt> EventTableCommonConfig<F> {
             meta,
             self.shared_bits[0],
             EventTableBitColumnRotation::Enable as i32
-        ) * fixed_curr!(meta, self.block_first_line_sel)
+        ) * self.block_first_line_sel.expr(meta)
+            * self.sel.is_enable_etable_entry_cur(meta)
     }
 
     pub fn enable(&self, meta: &mut VirtualCells<F>) -> Expression<F> {
@@ -14,7 +15,7 @@ impl<F: FieldExt> EventTableCommonConfig<F> {
             meta,
             self.shared_bits[0],
             EventTableBitColumnRotation::Enable as i32
-        )
+        ) * self.sel.is_enable_etable_entry_cur(meta)
     }
 
     pub fn next_enable(&self, meta: &mut VirtualCells<F>) -> Expression<F> {
@@ -22,7 +23,7 @@ impl<F: FieldExt> EventTableCommonConfig<F> {
             meta,
             self.shared_bits[0],
             EventTableBitColumnRotation::Enable as i32 + ETABLE_STEP_SIZE as i32
-        )
+        ) * self.sel.is_enable_etable_entry_next(meta)
     }
 
     pub fn op_enabled(&self, meta: &mut VirtualCells<F>, lvl1: i32, lvl2: i32) -> Expression<F> {

@@ -2,6 +2,7 @@ use self::configure::MemoryTableConstriants;
 
 use super::imtable::InitMemoryTableConfig;
 use super::rtable::RangeTableConfig;
+use super::shared_columns_pool::TableBlockFirstLineSelector;
 use super::shared_columns_pool::TableSelectorColumn;
 use super::utils::row_diff::RowDiffConfig;
 use super::utils::Context;
@@ -61,7 +62,7 @@ pub enum RotationOfBitColumn {
 pub struct MemoryTableConfig<F: FieldExt> {
     pub(crate) sel: TableSelectorColumn<F>,
     pub(crate) following_block_sel: Column<Fixed>,
-    pub(crate) block_first_line_sel: Column<Fixed>,
+    pub(crate) block_first_line_sel: TableBlockFirstLineSelector<F>,
 
     // See enum RotationOfBitColumn
     pub(crate) bit: Column<Advice>,
@@ -119,12 +120,7 @@ impl<F: FieldExt> MemoryTableChip<F> {
                 .assign(ctx, SharedColumnTableSelector::MemoryTable)?;
 
             if ctx.offset % (MTABLE_STEP_SIZE as usize) == 0 {
-                ctx.region.as_ref().borrow_mut().assign_fixed(
-                    || "block_first_line_sel",
-                    self.config.block_first_line_sel,
-                    ctx.offset,
-                    || Ok(F::one()),
-                )?;
+                self.config.block_first_line_sel.enable(ctx)?;
             }
 
             if i >= MTABLE_STEP_SIZE as usize {

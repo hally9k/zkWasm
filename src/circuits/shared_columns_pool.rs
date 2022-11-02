@@ -8,7 +8,7 @@ use halo2_proofs::{
 
 use crate::{constant, constant_from};
 
-use super::utils::Context;
+use super::{etable_compact::ETABLE_STEP_SIZE, utils::Context};
 
 const SHARED_ADVICE_COLUMN: usize = 12;
 
@@ -48,8 +48,12 @@ impl<F: FieldExt> TableSelectorColumn<F> {
         Ok(())
     }
 
-    fn expr(&self, meta: &mut VirtualCells<F>) -> Expression<F> {
-        meta.query_fixed(self.internal, Rotation::cur())
+    pub fn expr(&self, meta: &mut VirtualCells<F>) -> Expression<F> {
+        self.expr_rot(meta, Rotation::cur())
+    }
+
+    fn expr_rot(&self, meta: &mut VirtualCells<F>, rotation: Rotation) -> Expression<F> {
+        meta.query_fixed(self.internal, rotation)
     }
 
     pub fn is_enable_mtable_entry(&self, meta: &mut VirtualCells<F>) -> Expression<F> {
@@ -84,20 +88,64 @@ impl<F: FieldExt> TableSelectorColumn<F> {
         self.is_enable_jtable_entry(meta) * constant!(F::from(6).invert().unwrap())
     }
 
-    pub fn is_enable_etable_entry(&self, meta: &mut VirtualCells<F>) -> Expression<F> {
+    pub fn _is_enable_etable_entry(
+        &self,
+        meta: &mut VirtualCells<F>,
+        rotation: Rotation,
+    ) -> Expression<F> {
         /*
          * First use as selector to avoid Poison, pick etable entry
          */
-        self.expr(meta)
-            * (self.expr(meta) - constant_from!(SharedColumnTableSelector::ExecutionTable as u64))
-            * (self.expr(meta) - constant_from!(SharedColumnTableSelector::MemoryTable as u64))
+        self.expr_rot(meta, rotation)
+            * (self.expr_rot(meta, rotation)
+                - constant_from!(SharedColumnTableSelector::ExecutionTable as u64))
+            * (self.expr_rot(meta, rotation)
+                - constant_from!(SharedColumnTableSelector::MemoryTable as u64))
     }
 
-    pub fn is_enable_etable_entry_bit(&self, meta: &mut VirtualCells<F>) -> Expression<F> {
+    pub fn is_enable_etable_entry_cur(&self, meta: &mut VirtualCells<F>) -> Expression<F> {
+        self._is_enable_etable_entry(meta, Rotation::cur())
+    }
+
+    pub fn is_enable_etable_entry_next(&self, meta: &mut VirtualCells<F>) -> Expression<F> {
+        self._is_enable_etable_entry(meta, Rotation(ETABLE_STEP_SIZE as i32))
+    }
+
+    pub fn is_enable_etable_entry_cur_bit(&self, meta: &mut VirtualCells<F>) -> Expression<F> {
         /*
          * Normalize
          */
-        self.is_enable_etable_entry(meta) * constant!(F::from(2).invert().unwrap())
+        self.is_enable_etable_entry_cur(meta) * constant!(F::from(2).invert().unwrap())
+    }
+}
+
+#[derive(Clone)]
+pub struct TableBlockFirstLineSelector<F> {
+    internal: Column<Fixed>,
+    _mark: PhantomData<F>,
+}
+
+impl<F: FieldExt> TableBlockFirstLineSelector<F> {
+    fn alloc(meta: &mut ConstraintSystem<F>) -> Self {
+        TableBlockFirstLineSelector::<F> {
+            internal: meta.fixed_column(),
+            _mark: PhantomData,
+        }
+    }
+
+    pub fn enable(&self, ctx: &mut Context<'_, F>) -> Result<(), Error> {
+        ctx.region.as_ref().borrow_mut().assign_fixed(
+            || "table selector",
+            self.internal,
+            (ctx.offset as i32) as usize,
+            || Ok(F::one()),
+        )?;
+
+        Ok(())
+    }
+
+    pub fn expr(&self, meta: &mut VirtualCells<F>) -> Expression<F> {
+        meta.query_fixed(self.internal, Rotation::cur())
     }
 }
 
@@ -110,6 +158,8 @@ pub struct SharedColumns<F: FieldExt> {
     /// 2 for mtable,
     /// 3 for frame table
     table_selector: TableSelectorColumn<F>,
+
+    block_first_line_selector: TableBlockFirstLineSelector<F>,
 }
 
 impl<F: FieldExt> SharedColumns<F> {
@@ -117,6 +167,7 @@ impl<F: FieldExt> SharedColumns<F> {
         SharedColumns {
             advices: [(); SHARED_ADVICE_COLUMN].map(|_| meta.advice_column()),
             table_selector: TableSelectorColumn::<F>::alloc(meta),
+            block_first_line_selector: TableBlockFirstLineSelector::<F>::alloc(meta),
         }
     }
 
@@ -126,5 +177,9 @@ impl<F: FieldExt> SharedColumns<F> {
 
     pub fn get_table_selector(&self) -> TableSelectorColumn<F> {
         self.table_selector.clone()
+    }
+
+    pub fn get_block_first_line_selector(&self) -> TableBlockFirstLineSelector<F> {
+        self.block_first_line_selector.clone()
     }
 }

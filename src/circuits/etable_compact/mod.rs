@@ -1,4 +1,5 @@
 use self::op_configure::EventTableOpcodeConfig;
+use super::shared_columns_pool::TableBlockFirstLineSelector;
 use super::shared_columns_pool::TableSelectorColumn;
 use super::*;
 use crate::circuits::config::MAX_ETABLE_ROWS;
@@ -168,7 +169,7 @@ impl TryFrom<u32> for MLookupItem {
 #[derive(Clone)]
 pub struct EventTableCommonConfig<F> {
     pub sel: TableSelectorColumn<F>,
-    pub block_first_line_sel: Column<Fixed>,
+    pub block_first_line_sel: TableBlockFirstLineSelector<F>,
 
     pub shared_bits: [Column<Advice>; BITS_COLUMNS],
     pub opcode_bits: Column<Advice>,
@@ -213,7 +214,7 @@ impl<F: FieldExt> EventTableConfig<F> {
         let mut cols = shared_columns_pool.advices_iter();
 
         let sel = shared_columns_pool.get_table_selector();
-        let block_first_line_sel = meta.fixed_column();
+        let block_first_line_sel = shared_columns_pool.get_block_first_line_selector();
         let shared_bits = [0; BITS_COLUMNS].map(|_| cols.next().unwrap());
         let opcode_bits = cols.next().unwrap();
 
@@ -235,7 +236,7 @@ impl<F: FieldExt> EventTableConfig<F> {
         meta.create_gate("etable opcode bits", |meta| {
             vec![curr!(meta, opcode_bits) * (curr!(meta, opcode_bits) - constant_from!(1))]
                 .into_iter()
-                .map(|x| x * sel.is_enable_etable_entry(meta))
+                .map(|x| x * sel.is_enable_etable_entry_cur(meta))
                 .collect::<Vec<_>>()
         });
 
@@ -245,13 +246,13 @@ impl<F: FieldExt> EventTableConfig<F> {
                 .map(|x| {
                     curr!(meta, *x)
                         * (curr!(meta, *x) - constant_from!(1))
-                        * sel.is_enable_etable_entry(meta)
+                        * sel.is_enable_etable_entry_cur(meta)
                 })
                 .collect::<Vec<_>>()
         });
 
         rtable.configure_in_u4_bop_set(meta, "etable u4 bop", |meta| {
-            curr!(meta, u4_bop) * sel.is_enable_etable_entry_bit(meta)
+            curr!(meta, u4_bop) * sel.is_enable_etable_entry_cur_bit(meta)
         });
 
         rtable.configure_in_u4_bop_calc_set(meta, "etable u4 bop calc", |meta| {
@@ -259,38 +260,43 @@ impl<F: FieldExt> EventTableConfig<F> {
                 curr!(meta, u4_shared[0]),
                 curr!(meta, u4_shared[1]),
                 curr!(meta, u4_shared[2]),
-                curr!(meta, u4_bop) * sel.is_enable_etable_entry_bit(meta),
+                curr!(meta, u4_bop) * sel.is_enable_etable_entry_cur_bit(meta),
             )
         });
 
         rtable.configure_in_common_range(meta, "etable aux in common", |meta| {
-            curr!(meta, state) * sel.is_enable_etable_entry_bit(meta)
+            curr!(meta, state) * sel.is_enable_etable_entry_cur_bit(meta)
         });
 
         for i in 0..U4_COLUMNS {
             rtable.configure_in_u4_range(meta, "etable u4", |meta| {
-                curr!(meta, u4_shared[i]) * sel.is_enable_etable_entry_bit(meta)
+                curr!(meta, u4_shared[i]) * sel.is_enable_etable_entry_cur_bit(meta)
             });
         }
 
         for i in 0..U8_COLUMNS {
             rtable.configure_in_u8_range(meta, "etable u8", |meta| {
-                curr!(meta, u8_shared[i]) * sel.is_enable_etable_entry_bit(meta)
+                curr!(meta, u8_shared[i]) * sel.is_enable_etable_entry_cur_bit(meta)
             });
         }
 
         itable.configure_in_table(meta, "etable itable lookup", |meta| {
-            curr!(meta, aux) * fixed_curr!(meta, itable_lookup)
+            curr!(meta, aux)
+                * sel.is_enable_etable_entry_cur_bit(meta)
+                * fixed_curr!(meta, itable_lookup)
         });
 
         mtable.configure_in_table(meta, "etable mtable lookup", |meta| {
-            curr!(meta, aux) * fixed_curr!(meta, mtable_lookup)
+            curr!(meta, aux)
+                * sel.is_enable_etable_entry_cur_bit(meta)
+                * fixed_curr!(meta, mtable_lookup)
         });
 
         // TODO: elegantly handle the last return
         jtable.configure_in_table(meta, "etable jtable lookup", |meta| {
             curr!(meta, aux)
                 * nextn!(meta, aux, ETABLE_STEP_SIZE as i32)
+                * sel.is_enable_etable_entry_cur_bit(meta)
                 * fixed_curr!(meta, jtable_lookup)
         });
 
@@ -315,7 +321,7 @@ impl<F: FieldExt> EventTableConfig<F> {
                     base <<= 4;
                 }
 
-                vec![acc * fixed_curr!(meta, block_first_line_sel)]
+                vec![acc * sel.is_enable_etable_entry_cur(meta) * block_first_line_sel.expr(meta)]
             });
         }
 
@@ -349,8 +355,8 @@ impl<F: FieldExt> EventTableConfig<F> {
                 }
 
                 vec![
-                    acc1 * fixed_curr!(meta, block_first_line_sel),
-                    acc2 * fixed_curr!(meta, block_first_line_sel),
+                    acc1 * sel.is_enable_etable_entry_cur(meta) * block_first_line_sel.expr(meta),
+                    acc2 * sel.is_enable_etable_entry_cur(meta) * block_first_line_sel.expr(meta),
                 ]
             });
         }
@@ -392,7 +398,8 @@ impl<F: FieldExt> EventTableConfig<F> {
                     );
 
                     constraint_builder.finalize(foreign_tables, |meta|
-                        fixed_curr!(meta, common_config.block_first_line_sel) *
+                        common_config.sel.is_enable_etable_entry_cur(meta) *
+                        common_config.block_first_line_sel.expr(meta) *
                             common_config.op_enabled(meta, op_lvl1 as i32, op_lvl2 as i32)
                     );
 
@@ -418,7 +425,8 @@ impl<F: FieldExt> EventTableConfig<F> {
                     );
 
                     constraint_builder.finalize(foreign_tables, |meta|
-                        fixed_curr!(meta, common_config.block_first_line_sel) *
+                        common_config.sel.is_enable_etable_entry_cur(meta) *
+                        common_config.block_first_line_sel.expr(meta) *
                             common_config.op_enabled(meta, op_lvl1 as i32, op_lvl2 as i32)
                     );
 
@@ -465,7 +473,7 @@ impl<F: FieldExt> EventTableConfig<F> {
             vec![
                 common_config.next_enable(meta)
                     * (common_config.enable(meta) - constant_from!(1))
-                    * fixed_curr!(meta, common_config.block_first_line_sel),
+                    * common_config.block_first_line_sel.expr(meta),
             ]
         });
 

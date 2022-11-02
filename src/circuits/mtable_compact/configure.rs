@@ -65,7 +65,7 @@ pub trait MemoryTableConstriants<F: FieldExt> {
 impl<F: FieldExt> MemoryTableConstriants<F> for MemoryTableConfig<F> {
     fn configure_encode_range(&self, meta: &mut ConstraintSystem<F>, rtable: &RangeTableConfig<F>) {
         rtable.configure_in_common_range(meta, "mtable encode in common range", |meta| {
-            curr!(meta, self.aux) * self.is_enabled_line_normalize(meta)
+            curr!(meta, self.aux) * self.is_enabled_line(meta)
         })
     }
 
@@ -91,7 +91,7 @@ impl<F: FieldExt> MemoryTableConstriants<F> for MemoryTableConfig<F> {
                     nextn!(meta, self.bit, MTABLE_STEP_SIZE)
                         * (curr!(meta, self.bit) - constant_from!(1))
                         * self.is_enabled_line(meta)
-                        * fixed_curr!(meta, self.block_first_line_sel),
+                        * self.block_first_line_sel.expr(meta),
                 ]
             },
         );
@@ -117,7 +117,7 @@ impl<F: FieldExt> MemoryTableConstriants<F> for MemoryTableConfig<F> {
         });
 
         rtable.configure_in_common_range(meta, "mtable configure_index_sort", |meta| {
-            curr!(meta, self.index.data) * self.is_enabled_line_normalize(meta)
+            curr!(meta, self.index.data) * self.is_enabled_line(meta)
         });
     }
 
@@ -301,7 +301,7 @@ impl<F: FieldExt> MemoryTableConstriants<F> for MemoryTableConfig<F> {
 
     fn configure_tvalue_bytes(&self, meta: &mut ConstraintSystem<F>, rtable: &RangeTableConfig<F>) {
         rtable.configure_in_u8_range(meta, "mtable bytes", |meta| {
-            curr!(meta, self.bytes) * self.is_enabled_line_normalize(meta)
+            curr!(meta, self.bytes) * self.is_enabled_line(meta)
         });
 
         meta.create_gate("mtable byte mask consistent", |meta| {
@@ -387,7 +387,7 @@ impl<F: FieldExt> MemoryTableConfig<F> {
 
         let sel = shared_columns_pool.get_table_selector();
         let following_block_sel = meta.fixed_column();
-        let block_first_line_sel = meta.fixed_column();
+        let block_first_line_sel = shared_columns_pool.get_block_first_line_selector();
         let bit = cols.next().unwrap();
         let index =
             RowDiffConfig::configure("mtable index", meta, &mut cols, MTABLE_STEP_SIZE, |meta| {

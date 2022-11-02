@@ -9,20 +9,16 @@ use halo2_proofs::plonk::VirtualCells;
 
 impl<F: FieldExt> MemoryTableConfig<F> {
     pub(super) fn is_enabled_block(&self, meta: &mut VirtualCells<F>) -> Expression<F> {
-        curr!(meta, self.bit) * fixed_curr!(meta, self.block_first_line_sel)
+        curr!(meta, self.bit)
+            * self.sel.is_enable_mtable_entry_bit(meta)
+            * self.block_first_line_sel.expr(meta)
     }
 
     pub(super) fn is_enabled_following_block(&self, meta: &mut VirtualCells<F>) -> Expression<F> {
-        curr!(meta, self.bit)
-            * fixed_curr!(meta, self.block_first_line_sel)
-            * fixed_curr!(meta, self.following_block_sel)
+        self.is_enabled_block(meta) * fixed_curr!(meta, self.following_block_sel)
     }
 
     pub(super) fn is_enabled_line(&self, meta: &mut VirtualCells<F>) -> Expression<F> {
-        self.sel.is_enable_mtable_entry(meta)
-    }
-
-    pub(super) fn is_enabled_line_normalize(&self, meta: &mut VirtualCells<F>) -> Expression<F> {
         self.sel.is_enable_mtable_entry_bit(meta)
     }
 

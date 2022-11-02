@@ -19,12 +19,7 @@ impl<F: FieldExt> EventTableCommonConfig<F> {
                 .assign(ctx, SharedColumnTableSelector::ExecutionTable)?;
 
             if ctx.offset % ETABLE_STEP_SIZE == EventTableBitColumnRotation::Enable as usize {
-                ctx.region.as_ref().borrow_mut().assign_fixed(
-                    || "etable common block first line sel",
-                    self.block_first_line_sel,
-                    ctx.offset,
-                    || Ok(F::one()),
-                )?;
+                self.block_first_line_sel.enable(ctx)?;
             }
 
             if ctx.offset % ETABLE_STEP_SIZE
