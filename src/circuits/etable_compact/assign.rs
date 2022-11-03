@@ -27,9 +27,9 @@ impl<F: FieldExt> EventTableCommonConfig<F> {
             {
                 ctx.region.as_ref().borrow_mut().assign_fixed(
                     || "itable lookup",
-                    self.itable_lookup,
+                    self.table_lookup,
                     ctx.offset,
-                    || Ok(F::one()),
+                    || Ok(F::from(TableLookup::ITableLookup as u64)),
                 )?;
             }
 
@@ -37,10 +37,10 @@ impl<F: FieldExt> EventTableCommonConfig<F> {
                 == EventTableUnlimitColumnRotation::JTableLookup as usize
             {
                 ctx.region.as_ref().borrow_mut().assign_fixed(
-                    || "jtable lookup",
-                    self.jtable_lookup,
+                    || "frame table lookup",
+                    self.table_lookup,
                     ctx.offset,
-                    || Ok(F::one()),
+                    || Ok(F::from(TableLookup::FtableLookup as u64)),
                 )?;
             }
 
@@ -73,9 +73,9 @@ impl<F: FieldExt> EventTableCommonConfig<F> {
             {
                 ctx.region.as_ref().borrow_mut().assign_fixed(
                     || "mtable lookup",
-                    self.mtable_lookup,
+                    self.table_lookup,
                     ctx.offset,
-                    || Ok(F::one()),
+                    || Ok(F::from(TableLookup::MTableLookup as u64)),
                 )?;
             }
 

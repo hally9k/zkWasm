@@ -30,6 +30,7 @@ use crate::circuits::etable_compact::op_configure::EventTableOpcodeConfigBuilder
 use crate::circuits::itable::encode_inst_expr;
 use crate::circuits::itable::Encode;
 use crate::circuits::utils::bn_to_field;
+use crate::constant;
 use crate::constant_from;
 use crate::curr;
 use crate::fixed_curr;
@@ -136,6 +137,12 @@ impl From<usize> for MLookupItem {
     }
 }
 
+enum TableLookup {
+    ITableLookup = 1,
+    MTableLookup = 2,
+    FtableLookup = 3,
+}
+
 #[derive(Clone)]
 pub struct Status {
     pub eid: u64,
@@ -178,9 +185,8 @@ pub struct EventTableCommonConfig<F> {
 
     pub unlimited: Column<Advice>,
 
-    pub itable_lookup: Column<Fixed>,
-    pub jtable_lookup: Column<Fixed>,
-    pub mtable_lookup: Column<Fixed>,
+    /// See 'enum TableLookup'
+    pub table_lookup: Column<Fixed>,
     pub pow_table_lookup: Column<Fixed>,
     pub offset_len_bits_table_lookup: Column<Fixed>,
 
@@ -222,9 +228,7 @@ impl<F: FieldExt> EventTableConfig<F> {
         let aux = cols.next().unwrap();
         let unlimited = cols.next().unwrap();
 
-        let itable_lookup = meta.fixed_column();
-        let jtable_lookup = meta.fixed_column();
-        let mtable_lookup = meta.fixed_column();
+        let table_lookup = meta.fixed_column();
         let pow_table_lookup = meta.fixed_column();
         let offset_len_bits_table_lookup = meta.fixed_column();
 
@@ -283,13 +287,22 @@ impl<F: FieldExt> EventTableConfig<F> {
         itable.configure_in_table(meta, "etable itable lookup", |meta| {
             curr!(meta, aux)
                 * sel.is_enable_etable_entry_cur_bit(meta)
-                * fixed_curr!(meta, itable_lookup)
+                * (fixed_curr!(meta, table_lookup)
+                    - constant_from!(TableLookup::MTableLookup as u64))
+                * (fixed_curr!(meta, table_lookup)
+                    - constant_from!(TableLookup::FtableLookup as u64))
+                * constant!(F::from(2).invert().unwrap())
         });
 
         mtable.configure_in_table(meta, "etable mtable lookup", |meta| {
             curr!(meta, aux)
                 * sel.is_enable_etable_entry_cur_bit(meta)
-                * fixed_curr!(meta, mtable_lookup)
+                * fixed_curr!(meta, table_lookup)
+                * (fixed_curr!(meta, table_lookup)
+                    - constant_from!(TableLookup::ITableLookup as u64))
+                * (fixed_curr!(meta, table_lookup)
+                    - constant_from!(TableLookup::FtableLookup as u64))
+                * constant!(F::from(1).neg())
         });
 
         // TODO: elegantly handle the last return
@@ -297,7 +310,11 @@ impl<F: FieldExt> EventTableConfig<F> {
             curr!(meta, aux)
                 * nextn!(meta, aux, ETABLE_STEP_SIZE as i32)
                 * sel.is_enable_etable_entry_cur_bit(meta)
-                * fixed_curr!(meta, jtable_lookup)
+                * (fixed_curr!(meta, table_lookup)
+                    - constant_from!(TableLookup::ITableLookup as u64))
+                * (fixed_curr!(meta, table_lookup)
+                    - constant_from!(TableLookup::MTableLookup as u64))
+                * constant!(F::from(2).invert().unwrap())
         });
 
         rtable.configure_in_pow_set(meta, "etable pow_table lookup", |meta| {
@@ -368,9 +385,7 @@ impl<F: FieldExt> EventTableConfig<F> {
             opcode_bits,
             state,
             unlimited,
-            itable_lookup,
-            jtable_lookup,
-            mtable_lookup,
+            table_lookup,
             pow_table_lookup,
             offset_len_bits_table_lookup,
             aux,
