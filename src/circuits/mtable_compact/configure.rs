@@ -1,6 +1,7 @@
 use super::encode::MemoryTableLookupEncode;
 use super::*;
 use crate::circuits::config::IMTABLE_COLOMNS;
+use crate::circuits::rtable::RangeCheckKind;
 use crate::circuits::Lookup;
 use crate::constant_from;
 use crate::curr;
@@ -300,9 +301,12 @@ impl<F: FieldExt> MemoryTableConstriants<F> for MemoryTableConfig<F> {
     }
 
     fn configure_tvalue_bytes(&self, meta: &mut ConstraintSystem<F>, rtable: &RangeTableConfig<F>) {
-        rtable.configure_in_u8_range(meta, "mtable bytes", |meta| {
-            curr!(meta, self.bytes) * self.is_enabled_line(meta)
-        });
+        rtable.configure_in_range_check(
+            meta,
+            "mtable bytes",
+            |meta| curr!(meta, self.bytes) * self.is_enabled_line(meta),
+            RangeCheckKind::U8,
+        );
 
         meta.create_gate("mtable byte mask consistent", |meta| {
             vec![

@@ -1,5 +1,8 @@
 use super::Context;
-use crate::{circuits::rtable::RangeTableConfig, curr};
+use crate::{
+    circuits::rtable::{RangeCheckKind, RangeTableConfig},
+    curr,
+};
 use halo2_proofs::{
     arithmetic::FieldExt,
     plonk::{Advice, Column, ConstraintSystem, Error, Expression, VirtualCells},
@@ -21,7 +24,12 @@ impl<F: FieldExt> U8Config<F> {
     ) -> Self {
         let value = cols.next().unwrap();
 
-        rtable.configure_in_u8_range(meta, "u8", |meta| curr!(meta, value.clone()) * enable(meta));
+        rtable.configure_in_range_check(
+            meta,
+            "u8",
+            |meta| curr!(meta, value.clone()) * enable(meta),
+            RangeCheckKind::U8,
+        );
         Self {
             value,
             _mark: PhantomData,

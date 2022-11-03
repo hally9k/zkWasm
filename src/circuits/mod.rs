@@ -149,7 +149,7 @@ impl<F: FieldExt> Circuit<F> for TestCircuit<F> {
 
         let shared_columns_pool = SharedColumns::<F>::new(meta);
 
-        let rtable = RangeTableConfig::configure([0; 7].map(|_| meta.lookup_table_column()));
+        let rtable = RangeTableConfig::configure([0; 6].map(|_| meta.lookup_table_column()));
         let itable = InstructionTableConfig::configure(meta.lookup_table_column());
         let imtable = InitMemoryTableConfig::configure(
             [0; IMTABLE_COLOMNS].map(|_| meta.lookup_table_column()),

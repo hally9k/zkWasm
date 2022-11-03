@@ -1,7 +1,10 @@
 use std::marker::PhantomData;
 
 use super::Context;
-use crate::{circuits::rtable::RangeTableConfig, constant, curr};
+use crate::{
+    circuits::rtable::{RangeCheckKind, RangeTableConfig},
+    constant, curr,
+};
 use halo2_proofs::{
     arithmetic::FieldExt,
     plonk::{Advice, Column, ConstraintSystem, Error, Expression, VirtualCells},
@@ -25,9 +28,12 @@ impl<F: FieldExt> BitValueConfig<F> {
         let value = cols.next().unwrap();
 
         for i in 0..16 {
-            rtable.configure_in_u4_range(meta, "bits repr", |meta| {
-                curr!(meta, bits_le[i]) * enable(meta)
-            });
+            rtable.configure_in_range_check(
+                meta,
+                "bits repr",
+                |meta| curr!(meta, bits_le[i]) * enable(meta),
+                RangeCheckKind::U4,
+            );
         }
 
         meta.create_gate("bits le sum", |meta| {

@@ -1,5 +1,8 @@
 use super::Context;
-use crate::{circuits::rtable::RangeTableConfig, constant, curr};
+use crate::{
+    circuits::rtable::{RangeCheckKind, RangeTableConfig},
+    constant, curr,
+};
 use halo2_proofs::{
     arithmetic::FieldExt,
     plonk::{Advice, Column, ConstraintSystem, Error, Expression, VirtualCells},
@@ -24,9 +27,12 @@ impl<F: FieldExt> Bytes8Config<F> {
         let value = cols.next().unwrap();
 
         for byte in bytes_le.iter() {
-            rtable.configure_in_u8_range(meta, "byte", |meta| {
-                curr!(meta, byte.clone()) * enable(meta)
-            });
+            rtable.configure_in_range_check(
+                meta,
+                "byte",
+                |meta| curr!(meta, byte.clone()) * enable(meta),
+                RangeCheckKind::U8,
+            );
         }
 
         meta.create_gate("bytes8 sum", |meta| {

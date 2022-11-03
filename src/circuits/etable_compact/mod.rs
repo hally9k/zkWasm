@@ -29,6 +29,7 @@ use crate::circuits::etable_compact::op_configure::EventTableCellAllocator;
 use crate::circuits::etable_compact::op_configure::EventTableOpcodeConfigBuilder;
 use crate::circuits::itable::encode_inst_expr;
 use crate::circuits::itable::Encode;
+use crate::circuits::rtable::RangeCheckKind;
 use crate::circuits::utils::bn_to_field;
 use crate::constant;
 use crate::constant_from;
@@ -273,15 +274,21 @@ impl<F: FieldExt> EventTableConfig<F> {
         });
 
         for i in 0..U4_COLUMNS {
-            rtable.configure_in_u4_range(meta, "etable u4", |meta| {
-                curr!(meta, u4_shared[i]) * sel.is_enable_etable_entry_cur_bit(meta)
-            });
+            rtable.configure_in_range_check(
+                meta,
+                "etable u4",
+                |meta| curr!(meta, u4_shared[i]) * sel.is_enable_etable_entry_cur_bit(meta),
+                RangeCheckKind::U4,
+            );
         }
 
         for i in 0..U8_COLUMNS {
-            rtable.configure_in_u8_range(meta, "etable u8", |meta| {
-                curr!(meta, u8_shared[i]) * sel.is_enable_etable_entry_cur_bit(meta)
-            });
+            rtable.configure_in_range_check(
+                meta,
+                "etable u8",
+                |meta| curr!(meta, u8_shared[i]) * sel.is_enable_etable_entry_cur_bit(meta),
+                RangeCheckKind::U8,
+            );
         }
 
         itable.configure_in_table(meta, "etable itable lookup", |meta| {
