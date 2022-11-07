@@ -227,6 +227,7 @@ impl<F: FieldExt> Circuit<F> for TestCircuit<F> {
             || "jtable mtable etable",
             |region| {
                 let mut ctx = Context::new(region);
+                println!("etable: {}", &self.execution_tables.etable.entries().len());
 
                 let (rest_mops_cell, rest_jops_cell) =
                     { echip.assign(&mut ctx, &self.execution_tables.etable)? };
