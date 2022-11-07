@@ -275,7 +275,8 @@ impl ZkWasmCircuitBuilder {
     }
 
     fn prepare_param(&self) -> Params<G1Affine> {
-        let path = PathBuf::from(PARAMS);
+        let path = format!("{}.{}", K, PARAMS);
+        let path = PathBuf::from(path);
 
         if path.exists() {
             let mut fd = File::open(path.as_path()).unwrap();
