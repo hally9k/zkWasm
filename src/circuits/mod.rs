@@ -271,11 +271,11 @@ pub struct ZkWasmCircuitBuilder {
 const PARAMS: &str = "param.data";
 
 impl ZkWasmCircuitBuilder {
-    fn build_circuit<F: FieldExt>(&self) -> TestCircuit<F> {
+    pub fn build_circuit<F: FieldExt>(&self) -> TestCircuit<F> {
         TestCircuit::new(self.compile_tables.clone(), self.execution_tables.clone())
     }
 
-    fn prepare_param(&self) -> Params<G1Affine> {
+    pub fn prepare_param(&self) -> Params<G1Affine> {
         let path = format!("{}.{}", *K, PARAMS);
         let path = PathBuf::from(path);
 
@@ -307,7 +307,7 @@ impl ZkWasmCircuitBuilder {
         params
     }
 
-    fn prepare_vk(
+    pub fn prepare_vk(
         &self,
         circuit: &TestCircuit<Fr>,
         params: &Params<G1Affine>,
@@ -319,7 +319,7 @@ impl ZkWasmCircuitBuilder {
         vk
     }
 
-    fn prepare_pk(
+    pub fn prepare_pk(
         &self,
         circuit: &TestCircuit<Fr>,
         params: &Params<G1Affine>,
@@ -331,7 +331,7 @@ impl ZkWasmCircuitBuilder {
         pk
     }
 
-    fn create_proof(
+    pub fn create_proof(
         &self,
         circuits: &[TestCircuit<Fr>],
         params: &Params<G1Affine>,
@@ -357,7 +357,7 @@ impl ZkWasmCircuitBuilder {
         proof
     }
 
-    fn verify_check(
+    pub fn verify_check(
         &self,
         vk: &VerifyingKey<G1Affine>,
         params: &Params<G1Affine>,
