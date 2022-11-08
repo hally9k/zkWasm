@@ -11,7 +11,7 @@ pub fn build_test() -> (
     ExecutionOutcome,
     Vec<u64>,
 ) {
-    let public_inputs = vec![3];
+    let public_inputs = vec![0];
 
     let mut binary = vec![];
 

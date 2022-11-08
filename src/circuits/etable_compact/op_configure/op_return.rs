@@ -84,14 +84,14 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for ReturnConfig {
                 assert!(*drop < 1 << 16);
                 assert_eq!(keep.len(), keep_values.len());
 
-                self.drop.assign(ctx, *drop as u16)?;
+                self.drop.assign(ctx, *drop as u64)?;
 
                 if keep_values.len() == 0 {
                     self.keep.assign(ctx, false)?;
                 } else {
                     let vtype = VarType::from(keep[0]);
                     self.keep.assign(ctx, true)?;
-                    self.vtype.assign(ctx, vtype as u16)?;
+                    self.vtype.assign(ctx, vtype as u64)?;
                     self.value.assign(ctx, keep_values[0])?;
                     self.mtable_lookup_stack_read.assign(
                         ctx,

@@ -390,7 +390,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for StoreConfig {
                 self.is_two_bytes.assign(ctx, len == 2)?;
                 self.is_four_bytes.assign(ctx, len == 4)?;
                 self.is_eight_bytes.assign(ctx, len == 8)?;
-                self.vtype.assign(ctx, vtype as u16)?;
+                self.vtype.assign(ctx, vtype as u64)?;
 
                 self.lookup_stack_read_val.assign(
                     ctx,

@@ -367,7 +367,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for LoadConfig {
                 self.is_eight_bytes.assign(ctx, len == 8)?;
                 self.is_sign.assign(ctx, load_size.is_sign())?;
                 self.is_i64.assign(ctx, vtype == VarType::I64)?;
-                self.vtype.assign(ctx, vtype as u16)?;
+                self.vtype.assign(ctx, vtype as u64)?;
 
                 self.lookup_stack_read.assign(
                     ctx,

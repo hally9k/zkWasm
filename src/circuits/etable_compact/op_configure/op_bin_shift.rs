@@ -362,12 +362,15 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for BinShiftConfig {
         let flag_u4 = (left >> (size - 4)) as u16;
         let flag_bit = flag_u4 >> 3;
         self.flag_bit.assign(ctx, flag_bit == 1)?;
-        self.flag_u4_rem.assign(ctx, flag_u4 & 7)?;
-        self.flag_u4_rem_diff.assign(ctx, 7 - (flag_u4 & 7))?;
+        self.flag_u4_rem.assign(ctx, (flag_u4 & 7) as u64)?;
+        self.flag_u4_rem_diff
+            .assign(ctx, 7 - (flag_u4 & 7) as u64)?;
         self.rhs.assign(ctx, right)?;
-        self.rhs_round.assign(ctx, (right & 0xff) as u16 / size)?;
-        self.rhs_rem.assign(ctx, power as u16)?;
-        self.rhs_rem_diff.assign(ctx, size - 1 - power as u16)?;
+        self.rhs_round
+            .assign(ctx, ((right & 0xff) as u16 / size) as u64)?;
+        self.rhs_rem.assign(ctx, power as u64)?;
+        self.rhs_rem_diff
+            .assign(ctx, (size - 1 - power as u16) as u64)?;
         self.modulus.assign(ctx, 1 << power)?;
         self.lookup_pow.assign(ctx, power)?;
         self.is_eight_bytes.assign(ctx, is_eight_bytes)?;

@@ -82,10 +82,10 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for GlobalGetConfig {
                 value,
                 ..
             } => {
-                self.idx.assign(ctx, *idx as u16)?;
-                self.origin_idx.assign(ctx, *origin_idx as u16)?;
-                self.origin_moid.assign(ctx, *origin_module as u16)?;
-                self.vtype.assign(ctx, *vtype as u16)?;
+                self.idx.assign(ctx, *idx as u64)?;
+                self.origin_idx.assign(ctx, *origin_idx as u64)?;
+                self.origin_moid.assign(ctx, *origin_module as u64)?;
+                self.vtype.assign(ctx, *vtype as u64)?;
                 self.value.assign(ctx, *value)?;
 
                 self.lookup_global_read.assign(

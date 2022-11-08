@@ -108,14 +108,14 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for BrIfEqzConfig {
                     ),
                 )?;
 
-                self.drop.assign(ctx, drop)?;
+                self.drop.assign(ctx, drop as u64)?;
 
                 if keep.len() > 0 {
                     let keep_type: VarType = keep[0].into();
 
                     self.keep.assign(ctx, true)?;
                     self.keep_value.assign(ctx, keep_values[0])?;
-                    self.keep_type.assign(ctx, keep_type as u16)?;
+                    self.keep_type.assign(ctx, keep_type as u64)?;
 
                     if *condition == 0 {
                         self.lookup_stack_read_return_value.assign(
