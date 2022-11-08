@@ -47,7 +47,7 @@ use std::{
     borrow::BorrowMut,
     collections::{BTreeMap, BTreeSet},
     fs::File,
-    io::{Cursor, Read},
+    io::{Cursor, Read, Write},
     marker::PhantomData,
     path::PathBuf,
 };
@@ -269,6 +269,8 @@ pub struct ZkWasmCircuitBuilder {
 }
 
 const PARAMS: &str = "param.data";
+const PROOF: &str = "proof.data";
+const VK: &str = "vk.data";
 
 impl ZkWasmCircuitBuilder {
     pub fn build_circuit<F: FieldExt>(&self) -> TestCircuit<F> {
@@ -312,11 +314,23 @@ impl ZkWasmCircuitBuilder {
         circuit: &TestCircuit<Fr>,
         params: &Params<G1Affine>,
     ) -> VerifyingKey<G1Affine> {
-        let timer = start_timer!(|| "build vk");
-        let vk = keygen_vk(params, circuit).expect("keygen_vk should not fail");
-        end_timer!(timer);
+        let path = format!("{}.{}", *K, VK);
+        let path = PathBuf::from(path);
 
-        vk
+        if path.exists() {
+            let mut fd = File::open(path.as_path()).unwrap();
+
+            VerifyingKey::<G1Affine>::read::<_, TestCircuit<Fr>>(&mut fd, params).unwrap()
+        } else {
+            let timer = start_timer!(|| "build vk");
+            let vk = keygen_vk(params, circuit).expect("keygen_vk should not fail");
+            end_timer!(timer);
+
+            let mut fd = std::fs::File::create(path).unwrap();
+            vk.write(&mut fd).unwrap();
+
+            vk
+        }
     }
 
     pub fn prepare_pk(
@@ -338,23 +352,38 @@ impl ZkWasmCircuitBuilder {
         pk: &ProvingKey<G1Affine>,
         public_inputs: &Vec<Fr>,
     ) -> Vec<u8> {
-        let mut transcript = Blake2bWrite::<_, _, Challenge255<_>>::init(vec![]);
+        let path = format!("{}.{}", *K, PROOF);
+        let path = PathBuf::from(path);
 
-        let timer = start_timer!(|| "create proof");
-        create_proof(
-            params,
-            pk,
-            circuits,
-            &[&[public_inputs]],
-            OsRng,
-            &mut transcript,
-        )
-        .expect("proof generation should not fail");
-        end_timer!(timer);
+        if path.exists() {
+            let mut fd = File::open(path.as_path()).unwrap();
 
-        let proof = transcript.finalize();
+            let mut buf = vec![];
+            fd.read_to_end(&mut buf).unwrap();
 
-        proof
+            buf
+        } else {
+            let mut transcript = Blake2bWrite::<_, _, Challenge255<_>>::init(vec![]);
+
+            let timer = start_timer!(|| "create proof");
+            create_proof(
+                params,
+                pk,
+                circuits,
+                &[&[public_inputs]],
+                OsRng,
+                &mut transcript,
+            )
+            .expect("proof generation should not fail");
+            end_timer!(timer);
+
+            let proof = transcript.finalize();
+
+            let mut fd = std::fs::File::create(path).unwrap();
+            fd.write(&proof).unwrap();
+
+            proof
+        }
     }
 
     pub fn verify_check(
