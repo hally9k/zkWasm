@@ -173,7 +173,7 @@ impl<F: FieldExt> RangeTableChip<F> {
         layouter.assign_table(
             || "common range table",
             |mut table| {
-                for i in 0..(1 << (K - 1)) {
+                for i in 0..(1 << (*K - 1)) {
                     table.assign_cell(
                         || "range table",
                         self.config.u16_col,
@@ -285,7 +285,7 @@ impl<F: FieldExt> RangeTableChip<F> {
                     || Ok(F::from(0 as u64)),
                 )?;
                 let mut offset = 1;
-                for i in 0..POW_TABLE_LIMIT {
+                for i in 0..*POW_TABLE_LIMIT {
                     table.assign_cell(
                         || "range table",
                         self.config.pow_col,

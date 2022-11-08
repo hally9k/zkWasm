@@ -3,7 +3,7 @@ use crate::{
     runtime::{host::HostEnv, CompileOutcome, ExecutionOutcome, WasmInterpreter, WasmRuntime},
 };
 
-use std::{fs::File, io::Read, path::PathBuf};
+use std::{fs::File, io::Read, path::PathBuf, env};
 use wasmi::{tracer::Tracer, ImportsBuilder, Module, ModuleRef};
 
 pub fn build_test() -> (
@@ -15,7 +15,9 @@ pub fn build_test() -> (
 
     let mut binary = vec![];
 
-    let path = PathBuf::from("wasm/bsearch_64.wasm");
+    let file = env::var("ZKWASM_BSEARCH_FILE").unwrap_or("wasm/bsearch_200000.wasm".to_owned());
+    println!("zkwasm bsearch file is {}", file);
+    let path = PathBuf::from(&file);
     let mut f = File::open(path).unwrap();
     f.read_to_end(&mut binary).unwrap();
 

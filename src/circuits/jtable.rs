@@ -23,8 +23,10 @@ pub enum JtableOffset {
     JtableOffsetMax = 3,
 }
 
-const JTABLE_ROWS: usize = MAX_JATBLE_ROWS / JtableOffset::JtableOffsetMax as usize
-    * JtableOffset::JtableOffsetMax as usize;
+lazy_static! {
+    static ref JTABLE_ROWS: usize = *MAX_JATBLE_ROWS / JtableOffset::JtableOffsetMax as usize
+        * JtableOffset::JtableOffsetMax as usize;
+}
 
 #[derive(Clone)]
 pub struct JumpTableConfig<F: FieldExt> {
@@ -60,7 +62,7 @@ impl<F: FieldExt> JumpTableChip<F> {
         entries: &Vec<JumpTableEntry>,
         etable_rest_jops_cell: Option<Cell>,
     ) -> Result<(), Error> {
-        for i in 0..JTABLE_ROWS {
+        for i in 0..*JTABLE_ROWS {
             if (i as u32) % (JtableOffset::JtableOffsetMax as u32) == 0 {
                 ctx.region
                     .assign_fixed(|| "jtable sel", self.config.sel, i, || Ok(F::one()))?;

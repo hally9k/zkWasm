@@ -20,7 +20,9 @@ use specs::mtable::MemoryTableEntry;
 use specs::mtable::VarType;
 use std::marker::PhantomData;
 
-const MTABLE_ROWS: usize = MAX_MATBLE_ROWS / STEP_SIZE as usize * STEP_SIZE as usize;
+lazy_static! {
+    static ref MTABLE_ROWS: usize = *MAX_MATBLE_ROWS / STEP_SIZE as usize * STEP_SIZE as usize;
+}
 
 pub mod configure;
 pub(crate) mod encode;
@@ -108,9 +110,9 @@ impl<F: FieldExt> MemoryTableChip<F> {
         mtable: &MTable,
         etable_rest_mops_cell: Option<Cell>,
     ) -> Result<(), Error> {
-        assert_eq!(MTABLE_ROWS % (STEP_SIZE as usize), 0);
+        assert_eq!(*MTABLE_ROWS % (STEP_SIZE as usize), 0);
 
-        for i in 0..MTABLE_ROWS {
+        for i in 0..*MTABLE_ROWS {
             ctx.region
                 .assign_fixed(|| "mtable sel", self.config.sel, i, || Ok(F::one()))?;
 
@@ -339,7 +341,7 @@ impl<F: FieldExt> MemoryTableChip<F> {
             }
         }
 
-        for i in ctx.offset..MAX_MATBLE_ROWS {
+        for i in ctx.offset..*MAX_MATBLE_ROWS {
             self.config
                 .index
                 .assign(ctx, Some(i), F::zero(), F::zero())?;

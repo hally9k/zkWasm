@@ -109,7 +109,7 @@ pub struct PowTableLookupCell {
 
 impl PowTableLookupCell {
     pub fn assign<F: FieldExt>(&self, ctx: &mut Context<'_, F>, power: u64) -> Result<(), Error> {
-        assert!(power < POW_TABLE_LIMIT);
+        assert!(power < *POW_TABLE_LIMIT);
         ctx.region.assign_advice(
             || "pow lookup cell",
             self.col,

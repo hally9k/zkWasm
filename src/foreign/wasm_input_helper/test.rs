@@ -46,7 +46,7 @@ mod tests {
         let circuit = TestCircuit::<Fp>::new(compiled_module.tables, execution_log.tables);
 
         let prover = MockProver::run(
-            K,
+            *K,
             &circuit,
             vec![public_inputs.into_iter().map(|v| Fp::from(v)).collect()],
         )
@@ -102,7 +102,7 @@ mod tests {
         let circuit = TestCircuit::<Fp>::new(compiled_module.tables, execution_log.tables);
 
         let prover = MockProver::run(
-            K,
+            *K,
             &circuit,
             vec![public_inputs.into_iter().map(|v| Fp::from(v)).collect()],
         )

@@ -2,6 +2,8 @@ use crate::{
     foreign::wasm_input_helper::runtime::register_wasm_input_foreign,
     runtime::{host::HostEnv, CompileOutcome, ExecutionOutcome, WasmInterpreter, WasmRuntime},
 };
+use std::env;
+use std::str::FromStr;
 use wasmi::{tracer::Tracer, ImportsBuilder, Module, ModuleRef};
 
 /*
@@ -72,7 +74,9 @@ pub fn build_test() -> (
     "#;
 
     let wasm = wabt::wat2wasm(&textual_repr).expect("failed to parse wat");
-    let public_inputs = vec![13];
+    let dep = u64::from_str(&env::var("ZKWASM_FIBONACCI_DEP").unwrap_or("13".to_owned())).unwrap();
+    println!("fibonacci dep is {}", dep);
+    let public_inputs = vec![dep];
 
     let compiler = WasmInterpreter::new();
     let mut env = HostEnv::new();
