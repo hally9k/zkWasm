@@ -5,7 +5,7 @@ mod tests {
     use wasmi::{ImportsBuilder, NopExternals};
 
     use crate::{
-        circuits::ZkWasmCircuitBuilder,
+        circuits::run_circuit,
         runtime::{WasmInterpreter, WasmRuntime},
     };
 
@@ -29,11 +29,6 @@ mod tests {
             .run(&mut NopExternals, &compiled_module, "test", vec![], vec![])
             .unwrap();
 
-        let builder = ZkWasmCircuitBuilder {
-            compile_tables: compiled_module.tables,
-            execution_tables: execution_log.tables,
-        };
-
-        builder.bench(vec![])
+        let _ = run_circuit(compiled_module.tables, execution_log.tables, vec![]);
     }
 }

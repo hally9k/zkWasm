@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     use crate::{
-        circuits::ZkWasmCircuitBuilder,
+        circuits::run_circuit,
         foreign::{
             sha256_helper::{runtime::register_sha256_foreign, test::tests::prepare_inputs},
             wasm_input_helper::runtime::register_wasm_input_foreign,
@@ -42,11 +42,10 @@ mod tests {
             )
             .unwrap();
 
-        let builder = ZkWasmCircuitBuilder {
-            compile_tables: compiled_module.tables,
-            execution_tables: execution_log.tables,
-        };
-
-        builder.bench(public_inputs.into_iter().map(|v| Fp::from(v)).collect())
+        let _ = run_circuit(
+            compiled_module.tables,
+            execution_log.tables,
+            public_inputs.into_iter().map(|v| Fp::from(v)).collect(),
+        );
     }
 }

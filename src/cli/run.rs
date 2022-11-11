@@ -4,7 +4,7 @@ use std::io::Write;
 use std::{fmt, fs::File, io::Read, path::PathBuf};
 use wasmi::{ExternVal, ImportsBuilder};
 
-use crate::circuits::ZkWasmCircuitBuilder;
+use crate::circuits::run_circuit;
 use crate::foreign::wasm_input_helper::runtime::register_wasm_input_foreign;
 use crate::runtime::host::HostEnv;
 use crate::runtime::{WasmInterpreter, WasmRuntime};
@@ -106,18 +106,16 @@ pub fn exec(
         .write_all(etable_jtable_mtable_str.as_bytes())
         .unwrap();
 
-    let builder = ZkWasmCircuitBuilder {
-        compile_tables: compiled_module.tables,
-        execution_tables: execution_log.tables,
-    };
-
-    let (params, vk, proof) =
-        builder.bench_with_result(public_inputs.into_iter().map(|v| Fp::from(v)).collect());
+    let (params, vk, proof) = run_circuit(
+        compiled_module.tables,
+        execution_log.tables,
+        public_inputs.into_iter().map(|v| Fp::from(v)).collect(),
+    );
 
     let mut params_fd = File::create(output_path.to_string() + "param.data").unwrap();
-    params_fd.write_all(&params).unwrap();
+    params.write(&mut params_fd).unwrap();
     let mut vk_fd = File::create(output_path.to_string() + "vk.data").unwrap();
-    vk_fd.write_all(&vk).unwrap();
+    vk.write(&mut vk_fd).unwrap();
     let mut proof_fd = File::create(output_path.to_string() + "proof.data").unwrap();
     proof_fd.write_all(&proof).unwrap();
 
