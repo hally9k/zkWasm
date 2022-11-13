@@ -5,7 +5,7 @@ use halo2_proofs::{
     plonk::{Error, Expression, VirtualCells},
 };
 use specs::step::StepInfo;
-use specs::{encode::opcode::encode_br, mtable::VarType};
+use specs::{encode::opcode::encode_br, types::ValueType};
 use specs::{etable::EventTableEntry, itable::OpcodeClass};
 
 pub struct BrConfig {
@@ -74,7 +74,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for BrConfig {
                 self.drop.assign(ctx, drop)?;
 
                 if keep.len() > 0 {
-                    let keep_type: VarType = keep[0].into();
+                    let keep_type: ValueType = keep[0].into();
 
                     self.keep.assign(ctx, true)?;
                     self.keep_value.assign(ctx, keep_values[0])?;

@@ -1,4 +1,3 @@
-use super::mtable::VarType;
 use crate::{
     encode::opcode::{encode_br_if_eqz, encode_call, encode_global_get, encode_global_set},
     host_function::HostPlugin,
@@ -137,15 +136,15 @@ pub enum ConversionOp {
 #[derive(Clone, Debug, Serialize)]
 pub enum Opcode {
     LocalGet {
-        vtype: VarType,
+        vtype: ValueType,
         offset: u64,
     },
     LocalSet {
-        vtype: VarType,
+        vtype: ValueType,
         offset: u64,
     },
     LocalTee {
-        vtype: VarType,
+        vtype: ValueType,
         offset: u64,
     },
     GlobalGet {
@@ -155,7 +154,7 @@ pub enum Opcode {
         idx: u64,
     },
     Const {
-        vtype: VarType,
+        vtype: ValueType,
         value: u64,
     },
     Drop,
@@ -166,23 +165,23 @@ pub enum Opcode {
     },
     Bin {
         class: BinOp,
-        vtype: VarType,
+        vtype: ValueType,
     },
     BinShift {
         class: ShiftOp,
-        vtype: VarType,
+        vtype: ValueType,
     },
     BinBit {
         class: BitOp,
-        vtype: VarType,
+        vtype: ValueType,
     },
     Test {
         class: TestOp,
-        vtype: VarType,
+        vtype: ValueType,
     },
     Rel {
         class: RelOp,
-        vtype: VarType,
+        vtype: ValueType,
     },
     Br {
         drop: u32,
@@ -211,12 +210,12 @@ pub enum Opcode {
     },
     Load {
         offset: u32,
-        vtype: VarType,
+        vtype: ValueType,
         size: MemoryReadSize,
     },
     Store {
         offset: u32,
-        vtype: VarType,
+        vtype: ValueType,
         size: MemoryStoreSize,
     },
     Conversion {
@@ -235,7 +234,7 @@ impl Opcode {
         opcode_class.jops()
     }
 
-    pub fn vtype(&self) -> Option<VarType> {
+    pub fn vtype(&self) -> Option<ValueType> {
         match self {
             Opcode::Const { vtype, .. } => Some(*vtype),
             Opcode::Bin { vtype, .. } => Some(*vtype),
@@ -280,7 +279,7 @@ impl Into<BigUint> for Opcode {
                 (BigUint::from(OpcodeClass::Return as u64) << OPCODE_CLASS_SHIFT)
                     + (BigUint::from(drop as u64) << OPCODE_ARG0_SHIFT)
                     + (BigUint::from(keep.len() as u64) << OPCODE_ARG1_SHIFT)
-                    + keep.first().map_or(0u64, |x| VarType::from(*x) as u64)
+                    + keep.first().map_or(0u64, |x| ValueType::from(*x) as u64)
             }
             Opcode::Bin { class, vtype } => {
                 (BigUint::from(OpcodeClass::Bin as u64) << OPCODE_CLASS_SHIFT)

@@ -10,11 +10,11 @@ use halo2_proofs::{
     arithmetic::FieldExt,
     plonk::{Error, Expression, VirtualCells},
 };
-use specs::mtable::VarType;
 use specs::step::StepInfo;
 use specs::{
     etable::EventTableEntry,
     itable::{OpcodeClass, OPCODE_CLASS_SHIFT},
+    types::ValueType,
 };
 
 pub struct SelectConfig {
@@ -115,7 +115,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for SelectConfig {
                         BigUint::from(step_info.current.eid),
                         BigUint::from(1 as u64),
                         BigUint::from(step_info.current.sp + 1),
-                        BigUint::from(VarType::I32 as u64),
+                        BigUint::from(ValueType::I32 as u64),
                         BigUint::from(*cond),
                     ),
                 )?;
@@ -178,7 +178,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for SelectConfig {
                 common_config.eid(meta),
                 constant_from!(1),
                 common_config.sp(meta) + constant_from!(1),
-                constant_from!(VarType::I32),
+                constant_from!(ValueType::I32),
                 self.cond.expr(meta),
             )),
 

@@ -16,7 +16,7 @@ use specs::{
     etable::EventTableEntry,
     itable::{OpcodeClass, OPCODE_ARG0_SHIFT, OPCODE_ARG1_SHIFT, OPCODE_CLASS_SHIFT},
 };
-use specs::{mtable::VarType, step::StepInfo};
+use specs::{step::StepInfo, types::ValueType};
 
 pub struct StoreConfig {
     opcode_store_offset: CommonRangeCell,
@@ -409,7 +409,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for StoreConfig {
                         BigUint::from(step_info.current.eid),
                         BigUint::from(2 as u64),
                         BigUint::from(step_info.current.sp + 2),
-                        BigUint::from(VarType::I32 as u16),
+                        BigUint::from(ValueType::I32 as u16),
                         BigUint::from(raw_address),
                     ),
                 )?;
@@ -421,7 +421,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for StoreConfig {
                         BigUint::from(3 as u64),
                         BigUint::from(mmid),
                         BigUint::from(start_byte_index / 8),
-                        BigUint::from(VarType::I64 as u16),
+                        BigUint::from(ValueType::I64 as u16),
                         BigUint::from(pre_block_value),
                     ),
                 )?;
@@ -433,7 +433,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for StoreConfig {
                         BigUint::from(4 as u64),
                         BigUint::from(mmid),
                         BigUint::from(start_byte_index / 8),
-                        BigUint::from(VarType::I64 as u16),
+                        BigUint::from(ValueType::I64 as u16),
                         BigUint::from(updated_block_value),
                     ),
                 )?;
@@ -509,7 +509,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for StoreConfig {
                 common_config.eid(meta),
                 constant_from!(2),
                 common_config.sp(meta) + constant_from!(2),
-                constant_from!(VarType::I32),
+                constant_from!(ValueType::I32),
                 self.store_base.expr(meta),
             )),
             MLookupItem::Third => Some(MemoryTableLookupEncode::encode_memory_load(
@@ -517,7 +517,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for StoreConfig {
                 constant_from!(3),
                 common_config.mmid(meta),
                 self.store_start_block_index.expr(meta),
-                constant_from!(VarType::I64),
+                constant_from!(ValueType::I64),
                 self.load_value1.expr(meta),
             )),
             MLookupItem::Fourth => Some(
@@ -526,7 +526,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for StoreConfig {
                     constant_from!(4),
                     common_config.mmid(meta),
                     self.store_end_block_index.expr(meta),
-                    constant_from!(VarType::I64),
+                    constant_from!(ValueType::I64),
                     self.load_value2.expr(meta),
                 ) * cross_block.clone(),
             ),
@@ -535,7 +535,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for StoreConfig {
                 constant_from!(4) + cross_block,
                 common_config.mmid(meta),
                 self.store_start_block_index.expr(meta),
-                constant_from!(VarType::I64),
+                constant_from!(ValueType::I64),
                 self.store_value1.expr(meta),
             )),
             MLookupItem::Six => Some(
@@ -544,7 +544,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for StoreConfig {
                     constant_from!(6),
                     common_config.mmid(meta),
                     self.store_end_block_index.expr(meta),
-                    constant_from!(VarType::I64),
+                    constant_from!(ValueType::I64),
                     self.store_value2.expr(meta),
                 ) * cross_block.clone(),
             ),

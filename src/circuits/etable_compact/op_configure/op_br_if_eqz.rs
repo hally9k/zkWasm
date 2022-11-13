@@ -4,9 +4,8 @@ use halo2_proofs::{
     arithmetic::FieldExt,
     plonk::{Error, Expression, VirtualCells},
 };
-use specs::encode::opcode::encode_br_if_eqz;
-use specs::mtable::VarType;
 use specs::step::StepInfo;
+use specs::{encode::opcode::encode_br_if_eqz, types::ValueType};
 use specs::{etable::EventTableEntry, itable::OpcodeClass};
 
 pub struct BrIfEqzConfig {
@@ -103,7 +102,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for BrIfEqzConfig {
                         BigUint::from(entry.eid),
                         BigUint::from(1 as u64),
                         BigUint::from(entry.sp + 1),
-                        BigUint::from(VarType::I32 as u16),
+                        BigUint::from(ValueType::I32 as u16),
                         BigUint::from(cond),
                     ),
                 )?;
@@ -111,7 +110,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for BrIfEqzConfig {
                 self.drop.assign(ctx, drop)?;
 
                 if keep.len() > 0 {
-                    let keep_type: VarType = keep[0].into();
+                    let keep_type: ValueType = keep[0].into();
 
                     self.keep.assign(ctx, true)?;
                     self.keep_value.assign(ctx, keep_values[0])?;
@@ -198,7 +197,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for BrIfEqzConfig {
                 common_config.eid(meta),
                 constant_from!(1),
                 common_config.sp(meta) + constant_from!(1),
-                constant_from!(VarType::I32 as u32 as u64),
+                constant_from!(ValueType::I32 as u32 as u64),
                 self.cond.expr(meta),
             )),
 

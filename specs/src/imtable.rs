@@ -1,4 +1,4 @@
-use crate::mtable::{LocationType, VarType};
+use crate::{mtable::LocationType, types::ValueType};
 use serde::Serialize;
 
 #[derive(Serialize, Debug, Clone)]
@@ -7,7 +7,7 @@ pub struct InitMemoryTableEntry {
     pub is_mutable: bool,
     pub mmid: u64,
     pub offset: u64,
-    pub vtype: VarType,
+    pub vtype: ValueType,
     /// convert from [u8; 8] via u64::from_le_bytes
     pub value: u64,
 }

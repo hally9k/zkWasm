@@ -33,7 +33,7 @@ use specs::{
     etable::EventTableEntry,
     itable::{OpcodeClass, OPCODE_CLASS_SHIFT},
 };
-use specs::{host_function::HostPlugin, mtable::VarType};
+use specs::{host_function::HostPlugin, types::ValueType};
 
 pub struct ETableSha256HelperTableConfig {
     foreign_call_id: u64,
@@ -114,7 +114,7 @@ impl<F: FieldExt> EventTableForeignCallConfigBuilder<F> for ETableSha256HelperTa
                 Sha2HelperEncode::encode_opcode_expr(
                     op,
                     vec![a.expr(meta), b.expr(meta), c.expr(meta)],
-                    res.expr(meta)
+                    res.expr(meta),
                 )
             }),
         );
@@ -192,7 +192,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for ETableSha256HelperTableConfig {
                 common_config.eid(meta),
                 constant_from!(1),
                 common_config.sp(meta) + constant_from!(1),
-                constant_from!(VarType::I32),
+                constant_from!(ValueType::I32),
                 self.a.expr(meta),
             )),
             MLookupItem::Second => Some(
@@ -201,7 +201,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for ETableSha256HelperTableConfig {
                         common_config.eid(meta),
                         constant_from!(2),
                         common_config.sp(meta) + constant_from!(2),
-                        constant_from!(VarType::I32),
+                        constant_from!(ValueType::I32),
                         self.b.expr(meta),
                     ),
             ),
@@ -211,7 +211,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for ETableSha256HelperTableConfig {
                         common_config.eid(meta),
                         constant_from!(3),
                         common_config.sp(meta) + constant_from!(3),
-                        constant_from!(VarType::I32),
+                        constant_from!(ValueType::I32),
                         self.c.expr(meta),
                     ),
             ),
@@ -219,7 +219,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for ETableSha256HelperTableConfig {
                 common_config.eid(meta),
                 is_four_mops.clone() * constant_from!(2) + constant_from!(2),
                 common_config.sp(meta) + constant_from!(1) + is_four_mops * constant_from!(2),
-                constant_from!(VarType::I32),
+                constant_from!(ValueType::I32),
                 self.res.expr(meta),
             )),
             _ => None,
@@ -287,7 +287,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for ETableSha256HelperTableConfig {
                             BigUint::from(step_info.current.eid),
                             BigUint::from(1 + i as u64),
                             BigUint::from(step_info.current.sp + 1 + i as u64),
-                            BigUint::from(VarType::I32 as u64),
+                            BigUint::from(ValueType::I32 as u64),
                             BigUint::from(*v),
                         ),
                     )?;
@@ -299,7 +299,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for ETableSha256HelperTableConfig {
                         BigUint::from(step_info.current.eid),
                         BigUint::from(1 + args.len() as u64),
                         BigUint::from(step_info.current.sp + args.len() as u64),
-                        BigUint::from(VarType::I32 as u64),
+                        BigUint::from(ValueType::I32 as u64),
                         BigUint::from(ret_val.unwrap()),
                     ),
                 )?;

@@ -13,7 +13,7 @@ use halo2_proofs::{
 use specs::{
     etable::EventTableEntry,
     itable::{OpcodeClass, OPCODE_ARG0_SHIFT, OPCODE_CLASS_SHIFT},
-    mtable::VarType,
+    types::ValueType,
 };
 
 pub struct ConstConfig {
@@ -59,7 +59,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for ConstConfig {
         match &entry.step_info {
             specs::step::StepInfo::I32Const { value } => {
                 self.value.assign(ctx, *value as u32 as u64)?;
-                self.vtype.assign(ctx, VarType::I32 as u16)?;
+                self.vtype.assign(ctx, ValueType::I32 as u16)?;
 
                 self.lookup_stack_write.assign(
                     ctx,
@@ -67,7 +67,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for ConstConfig {
                         BigUint::from(step_info.current.eid),
                         BigUint::from(1 as u64),
                         BigUint::from(step_info.current.sp),
-                        BigUint::from(VarType::I32 as u16),
+                        BigUint::from(ValueType::I32 as u16),
                         BigUint::from(*value as u32 as u64),
                     ),
                 )?;
@@ -76,7 +76,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for ConstConfig {
             }
             specs::step::StepInfo::I64Const { value } => {
                 self.value.assign(ctx, *value as u64)?;
-                self.vtype.assign(ctx, VarType::I64 as u16)?;
+                self.vtype.assign(ctx, ValueType::I64 as u16)?;
 
                 self.lookup_stack_write.assign(
                     ctx,
@@ -84,7 +84,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for ConstConfig {
                         BigUint::from(step_info.current.eid),
                         BigUint::from(1 as u64),
                         BigUint::from(step_info.current.sp),
-                        BigUint::from(VarType::I64 as u16),
+                        BigUint::from(ValueType::I64 as u16),
                         BigUint::from(*value as u64),
                     ),
                 )?;

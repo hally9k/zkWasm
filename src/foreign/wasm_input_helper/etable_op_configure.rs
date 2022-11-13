@@ -23,7 +23,7 @@ use specs::{
     etable::EventTableEntry,
     itable::{OpcodeClass, OPCODE_CLASS_SHIFT},
 };
-use specs::{host_function::HostPlugin, mtable::VarType};
+use specs::{host_function::HostPlugin, types::ValueType};
 
 use super::circuits::{InputTableEncode, WASM_INPUT_FOREIGN_TABLE_KEY};
 
@@ -100,13 +100,13 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for ETableWasmInputHelperTableConfig
                 signature,
                 ..
             } => {
-                let arg_type: VarType = (*signature.params.get(0).unwrap()).into();
-                let ret_type: VarType = signature.return_type.unwrap().into();
+                let arg_type: ValueType = (*signature.params.get(0).unwrap()).into();
+                let ret_type: ValueType = signature.return_type.unwrap().into();
 
                 assert_eq!(*plugin, HostPlugin::HostInput);
                 assert_eq!(args.len(), 1);
-                assert_eq!(arg_type, VarType::I32);
-                assert_eq!(ret_type, VarType::I64);
+                assert_eq!(arg_type, ValueType::I32);
+                assert_eq!(ret_type, ValueType::I64);
 
                 self.public.assign(ctx, (*args.get(0).unwrap()) == 1)?;
                 self.value.assign(ctx, ret_val.unwrap())?;
@@ -168,14 +168,14 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for ETableWasmInputHelperTableConfig
                 common_config.eid(meta),
                 constant_from!(1),
                 common_config.sp(meta) + constant_from!(1),
-                constant_from!(VarType::I32),
+                constant_from!(ValueType::I32),
                 self.public.expr(meta),
             )),
             MLookupItem::Second => Some(MemoryTableLookupEncode::encode_stack_write(
                 common_config.eid(meta),
                 constant_from!(2),
                 common_config.sp(meta) + constant_from!(1),
-                constant_from!(VarType::I64),
+                constant_from!(ValueType::I64),
                 self.value.expr(meta),
             )),
             _ => None,

@@ -17,7 +17,7 @@ use specs::mtable::AccessType;
 use specs::mtable::LocationType;
 use specs::mtable::MTable;
 use specs::mtable::MemoryTableEntry;
-use specs::mtable::VarType;
+use specs::types::ValueType;
 use std::marker::PhantomData;
 
 const MTABLE_ROWS: usize = MAX_MATBLE_ROWS / STEP_SIZE as usize * STEP_SIZE as usize;
@@ -174,7 +174,7 @@ impl<F: FieldExt> MemoryTableChip<F> {
                     "vtype is i64",
                     RotationOfBitColumn::Is64Bit,
                     bit,
-                    if entry.vtype == VarType::I64 {
+                    if entry.vtype == ValueType::I64 {
                         F::one()
                     } else {
                         F::zero()

@@ -1,7 +1,7 @@
 use crate::{
     host_function::{HostPlugin, Signature},
     itable::{BinOp, BitOp, RelOp, ShiftOp},
-    mtable::{MemoryReadSize, MemoryStoreSize, VarType},
+    mtable::{MemoryReadSize, MemoryStoreSize},
     types::ValueType,
 };
 use serde::Serialize;
@@ -41,7 +41,7 @@ pub enum StepInfo {
         val2: u64,
         cond: u64,
         result: u64,
-        vtype: VarType,
+        vtype: ValueType,
     },
 
     Call {
@@ -58,17 +58,17 @@ pub enum StepInfo {
     },
 
     GetLocal {
-        vtype: VarType,
+        vtype: ValueType,
         depth: u32,
         value: u64,
     },
     SetLocal {
-        vtype: VarType,
+        vtype: ValueType,
         depth: u32,
         value: u64,
     },
     TeeLocal {
-        vtype: VarType,
+        vtype: ValueType,
         depth: u32,
         value: u64,
     },
@@ -77,7 +77,7 @@ pub enum StepInfo {
         idx: u32,
         origin_module: u16,
         origin_idx: u16,
-        vtype: VarType,
+        vtype: ValueType,
         is_mutable: bool,
         value: u64,
     },
@@ -85,13 +85,13 @@ pub enum StepInfo {
         idx: u32,
         origin_module: u16,
         origin_idx: u16,
-        vtype: VarType,
+        vtype: ValueType,
         is_mutable: bool,
         value: u64,
     },
 
     Load {
-        vtype: VarType,
+        vtype: ValueType,
         load_size: MemoryReadSize,
         offset: u32,
         raw_address: u32,
@@ -101,7 +101,7 @@ pub enum StepInfo {
         mmid: u64,
     },
     Store {
-        vtype: VarType,
+        vtype: ValueType,
         store_size: MemoryStoreSize,
         offset: u32,
         raw_address: u32,
@@ -158,7 +158,7 @@ pub enum StepInfo {
     },
 
     Test {
-        vtype: VarType,
+        vtype: ValueType,
         value: u64,
         result: i32,
     },

@@ -1,11 +1,21 @@
 use serde::Serialize;
+use strum_macros::EnumIter;
 
-use crate::{host_function::HostPlugin, mtable::VarType};
+use crate::host_function::HostPlugin;
 
-#[derive(Clone, Copy, Debug, Serialize, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, EnumIter, Serialize, Hash, Eq)]
 pub enum ValueType {
-    I32,
-    I64,
+    I32 = 1,
+    I64 = 2,
+}
+
+impl ValueType {
+    pub fn byte_size(&self) -> u64 {
+        match self {
+            ValueType::I32 => 4,
+            ValueType::I64 => 8,
+        }
+    }
 }
 
 impl From<parity_wasm::elements::ValueType> for ValueType {
@@ -25,11 +35,11 @@ pub enum Value {
     I64(i64),
 }
 
-impl Into<VarType> for Value {
-    fn into(self) -> VarType {
+impl Into<ValueType> for Value {
+    fn into(self) -> ValueType {
         match self {
-            Value::I32(_) => VarType::I32,
-            Value::I64(_) => VarType::I64,
+            Value::I32(_) => ValueType::I32,
+            Value::I64(_) => ValueType::I64,
         }
     }
 }

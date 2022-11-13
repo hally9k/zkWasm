@@ -12,8 +12,8 @@ use halo2_proofs::{
     plonk::{Error, Expression, VirtualCells},
 };
 use num_bigint::ToBigUint;
-use specs::mtable::VarType;
 use specs::step::StepInfo;
+use specs::types::ValueType;
 use specs::{
     etable::EventTableEntry,
     itable::{OpcodeClass, OPCODE_ARG0_SHIFT, OPCODE_ARG1_SHIFT, OPCODE_CLASS_SHIFT},
@@ -89,7 +89,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for ReturnConfig {
                 if keep_values.len() == 0 {
                     self.keep.assign(ctx, false)?;
                 } else {
-                    let vtype = VarType::from(keep[0]);
+                    let vtype = ValueType::from(keep[0]);
                     self.keep.assign(ctx, true)?;
                     self.vtype.assign(ctx, vtype as u16)?;
                     self.value.assign(ctx, keep_values[0])?;
@@ -154,12 +154,8 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for ReturnConfig {
         entry: &EventTableEntry,
     ) -> u64 {
         match &entry.step_info {
-            StepInfo::Return {
-                keep,
-                ..
-            } => {
-                if keep.len() > 0
-                {
+            StepInfo::Return { keep, .. } => {
+                if keep.len() > 0 {
                     assert!(keep.len() == 1);
                     2
                 } else {

@@ -10,12 +10,14 @@ use halo2_proofs::{
     arithmetic::FieldExt,
     plonk::{Error, Expression, VirtualCells},
 };
-use specs::itable::{RelOp, OPCODE_ARG1_SHIFT};
-use specs::mtable::VarType;
 use specs::step::StepInfo;
 use specs::{
     etable::EventTableEntry,
     itable::{OpcodeClass, OPCODE_ARG0_SHIFT, OPCODE_CLASS_SHIFT},
+};
+use specs::{
+    itable::{RelOp, OPCODE_ARG1_SHIFT},
+    types::ValueType,
 };
 
 pub struct RelConfig {
@@ -282,7 +284,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for RelConfig {
                 right,
                 value,
             } => {
-                let vtype = VarType::I32;
+                let vtype = ValueType::I32;
                 let lhs = left as u32 as u64;
                 let rhs = right as u32 as u64;
                 let diff = if lhs < rhs { rhs - lhs } else { lhs - rhs };
@@ -296,7 +298,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for RelConfig {
                 right,
                 value,
             } => {
-                let vtype = VarType::I64;
+                let vtype = ValueType::I64;
                 let lhs = left as u64;
                 let rhs = right as u64;
                 let diff = if lhs < rhs { rhs - lhs } else { lhs - rhs };
@@ -307,7 +309,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for RelConfig {
             _ => unreachable!(),
         };
 
-        if vtype == VarType::I64 {
+        if vtype == ValueType::I64 {
             self.is_eight_bytes.assign(ctx, true)?;
         }
 
@@ -374,7 +376,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for RelConfig {
                 BigUint::from(step_info.current.eid),
                 BigUint::from(3 as u64),
                 BigUint::from(step_info.current.sp + 2),
-                BigUint::from(VarType::I32 as u64),
+                BigUint::from(ValueType::I32 as u64),
                 BigUint::from(value as u64),
             ),
         )?;
@@ -417,7 +419,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for RelConfig {
                 common_config.eid(meta),
                 constant_from!(3),
                 common_config.sp(meta) + constant_from!(2),
-                constant_from!(VarType::I32),
+                constant_from!(ValueType::I32),
                 self.res.expr(meta),
             )),
             _ => None,

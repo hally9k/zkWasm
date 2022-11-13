@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use serde::Serialize;
 use strum_macros::EnumIter;
 
-use crate::imtable::InitMemoryTable;
+use crate::{imtable::InitMemoryTable, types::ValueType};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Hash)]
 pub enum LocationType {
@@ -17,21 +17,6 @@ pub enum AccessType {
     Read = 1,
     Write = 2,
     Init = 3,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, EnumIter, Serialize, Hash, Eq)]
-pub enum VarType {
-    I32 = 1,
-    I64,
-}
-
-impl VarType {
-    pub fn byte_size(&self) -> u64 {
-        match self {
-            VarType::I32 => 4,
-            VarType::I64 => 8,
-        }
-    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, EnumIter, Serialize, Hash, Eq)]
@@ -60,25 +45,6 @@ impl MemoryStoreSize {
             MemoryStoreSize::Byte16 => 2,
             MemoryStoreSize::Byte32 => 4,
             MemoryStoreSize::Byte64 => 8,
-        }
-    }
-}
-
-impl From<parity_wasm::elements::ValueType> for VarType {
-    fn from(v: parity_wasm::elements::ValueType) -> Self {
-        match v {
-            parity_wasm::elements::ValueType::I32 => Self::I32,
-            parity_wasm::elements::ValueType::I64 => Self::I64,
-            _ => todo!(),
-        }
-    }
-}
-
-impl From<crate::types::ValueType> for VarType {
-    fn from(v: crate::types::ValueType) -> Self {
-        match v {
-            crate::types::ValueType::I32 => Self::I32,
-            crate::types::ValueType::I64 => Self::I64,
         }
     }
 }
@@ -121,7 +87,7 @@ pub struct MemoryTableEntry {
     pub offset: u64,
     pub ltype: LocationType,
     pub atype: AccessType,
-    pub vtype: VarType,
+    pub vtype: ValueType,
     pub is_mutable: bool,
     pub value: u64,
 }

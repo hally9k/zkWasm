@@ -12,11 +12,11 @@ use halo2_proofs::{
     plonk::{Error, Expression, VirtualCells},
 };
 use specs::itable::{ShiftOp, OPCODE_ARG1_SHIFT};
-use specs::mtable::VarType;
 use specs::step::StepInfo;
 use specs::{
     etable::EventTableEntry,
     itable::{OpcodeClass, OPCODE_ARG0_SHIFT, OPCODE_CLASS_SHIFT},
+    types::ValueType,
 };
 
 pub struct BinShiftConfig {
@@ -301,7 +301,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for BinShiftConfig {
                     right,
                     value,
                 } => {
-                    let vtype = VarType::I32;
+                    let vtype = ValueType::I32;
                     let left = left as u32 as u64;
                     let right = right as u32 as u64;
                     let value = value as u32 as u64;
@@ -327,7 +327,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for BinShiftConfig {
                     value,
                 } => {
                     // FIXME: check
-                    let vtype = VarType::I64;
+                    let vtype = ValueType::I64;
                     let left = left as u64;
                     let right = right as u64;
                     let value = value as u64;

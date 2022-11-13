@@ -14,7 +14,7 @@ use specs::{
     etable::EventTableEntry,
     itable::{OpcodeClass, OPCODE_ARG0_SHIFT, OPCODE_CLASS_SHIFT},
 };
-use specs::{itable::TestOp, mtable::VarType};
+use specs::{itable::TestOp, types::ValueType};
 use specs::{itable::OPCODE_ARG1_SHIFT, step::StepInfo};
 
 pub struct TestConfig {
@@ -60,9 +60,9 @@ impl<F: FieldExt> EventTableOpcodeConfigBuilder<F> for TestConfigBuilder {
 
 impl<F: FieldExt> EventTableOpcodeConfig<F> for TestConfig {
     fn opcode(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
-        let vtype = self.is_four_bytes.expr(meta) * constant_from!(VarType::I32 as u64)
+        let vtype = self.is_four_bytes.expr(meta) * constant_from!(ValueType::I32 as u64)
             + (constant_from!(1) - self.is_four_bytes.expr(meta))
-                * constant_from!(VarType::I64 as u64);
+                * constant_from!(ValueType::I64 as u64);
 
         constant!(bn_to_field(
             &(BigUint::from(OpcodeClass::Test as u64) << OPCODE_CLASS_SHIFT)
@@ -84,8 +84,8 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for TestConfig {
                 result,
             } => {
                 match vtype {
-                    VarType::I32 => self.is_four_bytes.assign(ctx, true)?,
-                    VarType::I64 => (),
+                    ValueType::I32 => self.is_four_bytes.assign(ctx, true)?,
+                    ValueType::I64 => (),
                 }
                 self.value.assign(ctx, value)?;
                 self.res.assign(ctx, result == 1)?;
@@ -107,7 +107,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for TestConfig {
                         BigUint::from(step_info.current.eid),
                         BigUint::from(2 as u64),
                         BigUint::from(step_info.current.sp + 1),
-                        BigUint::from(VarType::I32 as u16),
+                        BigUint::from(ValueType::I32 as u16),
                         BigUint::from(result as u32 as u64),
                     ),
                 )?;
@@ -137,9 +137,9 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for TestConfig {
                 common_config.eid(meta),
                 constant_from!(1),
                 common_config.sp(meta) + constant_from!(1),
-                self.is_four_bytes.expr(meta) * constant_from!(VarType::I32)
+                self.is_four_bytes.expr(meta) * constant_from!(ValueType::I32)
                     + (constant_from!(1) - self.is_four_bytes.expr(meta))
-                        * constant_from!(VarType::I64),
+                        * constant_from!(ValueType::I64),
                 self.value.expr(meta),
             )),
 
@@ -147,7 +147,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for TestConfig {
                 common_config.eid(meta),
                 constant_from!(2),
                 common_config.sp(meta) + constant_from!(1),
-                constant_from!(VarType::I32),
+                constant_from!(ValueType::I32),
                 self.res.expr(meta),
             )),
 

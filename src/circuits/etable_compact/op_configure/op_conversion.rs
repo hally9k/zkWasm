@@ -5,7 +5,7 @@ use halo2_proofs::{
     plonk::{Error, Expression, VirtualCells},
 };
 use specs::step::StepInfo;
-use specs::{encode::opcode::encode_conversion, mtable::VarType};
+use specs::{encode::opcode::encode_conversion, types::ValueType};
 use specs::{
     etable::EventTableEntry,
     itable::{ConversionOp, OpcodeClass},
@@ -70,13 +70,13 @@ impl<F: FieldExt> EventTableOpcodeConfigBuilder<F> for ConversionConfigBuilder {
             Box::new(move |meta| {
                 vec![
                     is_i32_wrap_i64.expr(meta)
-                        * (value_type.expr(meta) - constant_from!(VarType::I64)),
+                        * (value_type.expr(meta) - constant_from!(ValueType::I64)),
                     is_i32_wrap_i64.expr(meta)
-                        * (res_type.expr(meta) - constant_from!(VarType::I32)),
+                        * (res_type.expr(meta) - constant_from!(ValueType::I32)),
                     (is_i64_extend_i32_s.expr(meta) + is_i64_extend_i32_u.expr(meta))
-                        * (value_type.expr(meta) - constant_from!(VarType::I32)),
+                        * (value_type.expr(meta) - constant_from!(ValueType::I32)),
                     (is_i64_extend_i32_s.expr(meta) + is_i64_extend_i32_u.expr(meta))
-                        * (res_type.expr(meta) - constant_from!(VarType::I64)),
+                        * (res_type.expr(meta) - constant_from!(ValueType::I64)),
                 ]
             }),
         );
@@ -164,7 +164,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for ConversionConfig {
 
                 self.is_i32_wrap_i64.assign(ctx, true)?;
 
-                (value, VarType::I64, result as u32 as u64, VarType::I32)
+                (value, ValueType::I64, result as u32 as u64, ValueType::I32)
             }
             StepInfo::I64ExtendI32 {
                 value,
@@ -188,9 +188,9 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for ConversionConfig {
 
                 (
                     value as u32 as u64,
-                    VarType::I32,
+                    ValueType::I32,
                     result as u64,
-                    VarType::I64,
+                    ValueType::I64,
                 )
             }
             _ => unreachable!(),
