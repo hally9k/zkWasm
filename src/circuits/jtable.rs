@@ -10,7 +10,8 @@ use halo2_proofs::plonk::Column;
 use halo2_proofs::plonk::ConstraintSystem;
 use halo2_proofs::plonk::Error;
 use halo2_proofs::plonk::Fixed;
-use specs::jtable::JumpTableEntry;
+use specs::jtable::FrameTable;
+use specs::jtable::FrameTableEntry;
 use std::marker::PhantomData;
 
 mod configure;
@@ -57,7 +58,7 @@ impl<F: FieldExt> JumpTableChip<F> {
     pub fn assign(
         &self,
         ctx: &mut Context<'_, F>,
-        entries: &Vec<JumpTableEntry>,
+        ftable: &FrameTable,
         etable_rest_jops_cell: Option<Cell>,
     ) -> Result<(), Error> {
         for i in 0..JTABLE_ROWS {
@@ -67,7 +68,8 @@ impl<F: FieldExt> JumpTableChip<F> {
             }
         }
 
-        let entries: Vec<&JumpTableEntry> = entries.into_iter().filter(|e| e.eid != 0).collect();
+        let entries: Vec<&FrameTableEntry> =
+            ftable.entries().iter().filter(|e| e.eid != 0).collect();
         let mut rest = entries.len() as u64 * 2;
         for (i, entry) in entries.iter().enumerate() {
             let rest_f = rest.into();

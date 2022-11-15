@@ -13,21 +13,40 @@ pub struct InitMemoryTableEntry {
 }
 
 #[derive(Serialize, Default, Debug, Clone)]
-pub struct InitMemoryTable(pub Vec<InitMemoryTableEntry>);
+pub struct InitMemoryTable {
+    entries: Vec<InitMemoryTableEntry>,
+    finalized: bool,
+}
 
 impl InitMemoryTable {
-    pub fn new(entries: Vec<InitMemoryTableEntry>) -> Self {
-        let mut imtable = Self(entries);
-        imtable.sort();
-        imtable
+    pub fn new() -> Self {
+        InitMemoryTable {
+            entries: vec![],
+            finalized: false,
+        }
+    }
+
+    pub fn push(&mut self, entry: &InitMemoryTableEntry) {
+        self.entries.push(entry.clone())
+    }
+
+    pub fn finalized(&mut self) {
+        self.sort();
+        self.finalized = true;
+    }
+
+    pub fn entries(&self) -> &Vec<InitMemoryTableEntry> {
+        assert!(self.finalized);
+
+        &self.entries
     }
 
     pub fn to_string(&self) -> String {
-        serde_json::to_string(&self.0).unwrap()
+        serde_json::to_string(&self.entries).unwrap()
     }
 
     pub fn find(&self, ltype: LocationType, mmid: u64, offset: u64) -> u64 {
-        for entry in self.0.iter() {
+        for entry in self.entries.iter() {
             if entry.ltype == ltype && entry.mmid == mmid && entry.offset == offset {
                 return entry.value;
             }
@@ -37,11 +56,13 @@ impl InitMemoryTable {
     }
 
     fn sort(&mut self) {
-        self.0
+        self.entries
             .sort_by_key(|item| (item.ltype, item.mmid, item.offset))
     }
 
     pub fn filter(&self, ltype: LocationType) -> Vec<&InitMemoryTableEntry> {
-        self.0.iter().filter(|e| e.ltype == ltype).collect()
+        assert!(self.finalized);
+
+        self.entries.iter().filter(|e| e.ltype == ltype).collect()
     }
 }

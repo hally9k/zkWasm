@@ -6,14 +6,16 @@ use std::{env, io::Write, path::PathBuf};
 
 use etable::EventTable;
 use imtable::InitMemoryTable;
+use jtable::FrameTable;
 use mtable::MTable;
 use serde::Serialize;
 
-use self::{itable::InstructionTableEntry, jtable::JumpTableEntry};
+use self::itable::InstructionTableEntry;
 
 #[macro_use]
 extern crate lazy_static;
 
+pub mod encode;
 pub mod etable;
 pub mod host_function;
 pub mod imtable;
@@ -22,7 +24,6 @@ pub mod jtable;
 pub mod mtable;
 pub mod step;
 pub mod types;
-pub mod encode;
 
 #[derive(Default, Serialize, Debug, Clone)]
 pub struct CompileTable {
@@ -40,7 +41,7 @@ impl CompileTable {
 pub struct ExecutionTable {
     pub etable: EventTable,
     pub mtable: MTable,
-    pub jtable: Vec<JumpTableEntry>,
+    pub jtable: FrameTable,
 }
 
 impl ExecutionTable {

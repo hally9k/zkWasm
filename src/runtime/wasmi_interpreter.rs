@@ -3,7 +3,6 @@ use std::{cell::RefCell, collections::HashMap, rc::Rc};
 use specs::{
     etable::EventTable,
     host_function::HostFunctionDesc,
-    imtable::InitMemoryTable,
     mtable::MTable,
     types::{CompileError, ExecutionError},
     CompileTable, ExecutionTable,
@@ -56,15 +55,8 @@ impl WasmRuntime for WasmiRuntime {
             .iter()
             .map(|ientry| ientry.clone().into())
             .collect();
-        let imtable = InitMemoryTable::new(
-            tracer
-                .borrow()
-                .imtable
-                .0
-                .iter()
-                .map(|imentry| imentry.clone().into())
-                .collect(),
-        );
+        let mut imtable = tracer.borrow().imtable.clone();
+        imtable.finalized();
 
         Ok(CompileOutcome {
             module,
@@ -113,12 +105,7 @@ impl WasmRuntime for WasmiRuntime {
         let mut mtable = MTable::new(mentries);
         mtable.push_accessed_memory_initialization(&compile_outcome.tables.imtable);
 
-        let jtable = tracer
-            .jtable
-            .0
-            .iter()
-            .map(|jentry| (*jentry).clone().into())
-            .collect::<Vec<_>>();
+        let jtable = tracer.jtable.clone();
 
         Ok(ExecutionOutcome {
             tables: ExecutionTable {

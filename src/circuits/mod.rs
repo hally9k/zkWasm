@@ -218,7 +218,7 @@ impl<F: FieldExt> Circuit<F> for TestCircuit<F> {
         )?;
 
         ichip.assign(&mut layouter, &self.compile_tables.itable)?;
-        if self.compile_tables.imtable.0.len() > 0 {
+        if self.compile_tables.imtable.entries().len() > 0 {
             imchip.assign(&mut layouter, &self.compile_tables.imtable)?;
         }
 
