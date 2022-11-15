@@ -204,15 +204,13 @@ impl<F: FieldExt> Circuit<F> for TestCircuit<F> {
 
         sha256chip.assign(
             &mut layouter,
-            &self
-                .execution_tables
+            self.execution_tables
                 .etable
                 .filter_foreign_entries(HostPlugin::Sha256),
         )?;
         wasm_input_chip.assign(
             &mut layouter,
-            &self
-                .execution_tables
+            self.execution_tables
                 .etable
                 .filter_foreign_entries(HostPlugin::HostInput),
         )?;

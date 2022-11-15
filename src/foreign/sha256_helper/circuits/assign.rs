@@ -14,7 +14,7 @@ impl<F: FieldExt> Sha256HelperTableChip<F> {
     pub fn assign(
         &self,
         layouter: &mut impl Layouter<F>,
-        entry: &Vec<EventTableEntry>,
+        entry: Vec<&EventTableEntry>,
     ) -> Result<(), Error> {
         layouter.assign_region(
             || "sha256 helper assign",

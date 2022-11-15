@@ -49,10 +49,9 @@ impl EventTable {
         &self.0
     }
 
-    pub fn filter_foreign_entries(&self, foreign: HostPlugin) -> Vec<EventTableEntry> {
+    pub fn filter_foreign_entries(&self, foreign: HostPlugin) -> Vec<&EventTableEntry> {
         self.0
-            .clone()
-            .into_iter()
+            .iter()
             .filter(|entry| match entry.step_info {
                 StepInfo::CallHost { plugin, .. } => plugin == foreign,
                 _ => false,
