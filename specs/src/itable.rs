@@ -2,7 +2,7 @@ use crate::{
     encode::opcode::{encode_br_if_eqz, encode_call, encode_global_get, encode_global_set},
     host_function::HostPlugin,
     mtable::{MemoryReadSize, MemoryStoreSize},
-    types::ValueType,
+    types::{CommonRange, ValueType},
 };
 use num_bigint::BigUint;
 use serde::Serialize;
@@ -412,11 +412,24 @@ impl Into<OpcodeClassPlain> for Opcode {
 
 #[derive(Clone, Debug, Serialize)]
 pub struct InstructionTableEntry {
-    pub moid: u16,
-    pub mmid: u16,
-    pub fid: u16,
-    pub iid: u16,
+    pub moid: CommonRange,
+    pub mmid: CommonRange,
+    pub fid: CommonRange,
+    pub iid: CommonRange,
     pub opcode: Opcode,
+}
+
+#[derive(Debug)]
+pub struct InstructionTable(pub Vec<InstructionTableEntry>);
+
+impl InstructionTable {
+    pub fn new() -> Self {
+        InstructionTable(vec![])
+    }
+
+    pub fn push(&mut self, entry: &InstructionTableEntry) {
+        self.0.push(entry.clone())
+    }
 }
 
 impl InstructionTableEntry {

@@ -3,6 +3,8 @@ use strum_macros::EnumIter;
 
 use crate::host_function::HostPlugin;
 
+pub type CommonRange = u16;
+
 #[derive(Clone, Copy, Debug, PartialEq, EnumIter, Serialize, Hash, Eq)]
 pub enum ValueType {
     I32 = 1,
