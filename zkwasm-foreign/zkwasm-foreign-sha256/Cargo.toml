@@ -1,0 +1,21 @@
+[package]
+name = "zkwasm-foreign-sha256"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+halo2_proofs = { git = "https://github.com/junyu0312/halo2", branch = "gpu", default-features = true }
+hex = "0.4.3"
+num-bigint = { version = "0.4", features = ["rand"] }
+strum = "0.24.1"
+strum_macros = "0.24.1"
+wasmi = { path = "../../wasmi" }
+zkwasm-circuit-utils = { path = "../../zkwasm-circuit-utils" }
+zkwasm-types = { path = "../../zkwasm-types" }
+zkwasm-foreign-sdk = { path = "../zkwasm-foreign-sdk" }
+
+[features]
+default = []
+cuda = ["halo2_proofs/cuda"]

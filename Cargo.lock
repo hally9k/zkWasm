@@ -293,12 +293,16 @@ dependencies = [
  "num-integer",
  "num-traits",
  "rand",
- "specs",
  "strum",
  "strum_macros",
  "wabt",
  "wasmi",
  "wast",
+ "zkwasm-circuit-utils",
+ "zkwasm-config",
+ "zkwasm-foreign-sdk",
+ "zkwasm-foreign-sha256",
+ "zkwasm-types",
 ]
 
 [[package]]
@@ -998,20 +1002,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "specs"
-version = "0.1.0"
-dependencies = [
- "halo2_proofs",
- "lazy_static",
- "num-bigint",
- "parity-wasm",
- "serde",
- "serde_json",
- "strum",
- "strum_macros",
-]
-
-[[package]]
 name = "spin"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1185,9 +1175,9 @@ name = "wasmi"
 version = "0.11.0"
 dependencies = [
  "parity-wasm",
- "specs",
  "wasmi-validation",
  "wasmi_core",
+ "zkwasm-types",
 ]
 
 [[package]]
@@ -1290,4 +1280,57 @@ checksum = "8ca6c5a4d66c1a9ea261811cf4773c27343de7e5033e1b75ea3f297dc7db3c1a"
 dependencies = [
  "flume",
  "scopeguard",
+]
+
+[[package]]
+name = "zkwasm-circuit-utils"
+version = "0.1.0"
+dependencies = [
+ "halo2_proofs",
+ "lazy_static",
+ "num-bigint",
+ "zkwasm-config",
+ "zkwasm-types",
+]
+
+[[package]]
+name = "zkwasm-config"
+version = "0.1.0"
+
+[[package]]
+name = "zkwasm-foreign-sdk"
+version = "0.1.0"
+dependencies = [
+ "downcast-rs",
+ "wasmi",
+ "zkwasm-types",
+]
+
+[[package]]
+name = "zkwasm-foreign-sha256"
+version = "0.1.0"
+dependencies = [
+ "halo2_proofs",
+ "hex",
+ "num-bigint",
+ "strum",
+ "strum_macros",
+ "wasmi",
+ "zkwasm-circuit-utils",
+ "zkwasm-foreign-sdk",
+ "zkwasm-types",
+]
+
+[[package]]
+name = "zkwasm-types"
+version = "0.1.0"
+dependencies = [
+ "halo2_proofs",
+ "lazy_static",
+ "num-bigint",
+ "parity-wasm",
+ "serde",
+ "serde_json",
+ "strum",
+ "strum_macros",
 ]

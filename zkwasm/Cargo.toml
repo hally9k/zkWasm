@@ -1,0 +1,36 @@
+[package]
+name = "delphinus-zkwasm"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "cli"
+path = "src/cli/main.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ark-std = { version = "0.3.0", features = ["print-trace"] }
+downcast-rs = "1.2.0"
+halo2_proofs = { git = "https://github.com/junyu0312/halo2", branch = "gpu", default-features = true }
+num-integer = "0.1"
+num-bigint = { version = "0.4", features = ["rand"] }
+num-traits = "0.2.15"
+wabt = "0.10.0"
+wasmi = { path = "../wasmi" }
+lazy_static = "1.4.0"
+rand = "0.8.4"
+zkwasm-types = { path = "../zkwasm-types" }
+strum = "0.24.1"
+strum_macros = "0.24.1"
+wast = "47.0.0"
+clap = { version = "3.2.22", features = ["derive","cargo"] }
+hex = "0.4.3"
+zkwasm-config = { path = "../zkwasm-config" }
+zkwasm-circuit-utils = { path = "../zkwasm-circuit-utils" }
+zkwasm-foreign-sdk = { path = "../zkwasm-foreign/zkwasm-foreign-sdk" }
+zkwasm-foreign-sha256 = { path = "../zkwasm-foreign/zkwasm-foreign-sha256" }
+
+[features]
+default = []
+cuda = ["halo2_proofs/cuda", "zkwasm-types/cuda"]
