@@ -12,6 +12,7 @@ pub const SHA256_FOREIGN_FUNCTION_NAME_SSIGMA0: &'static str = "zkwasm_sha256_ss
 pub const SHA256_FOREIGN_FUNCTION_NAME_SSIGMA1: &'static str = "zkwasm_sha256_ssigma1";
 pub const SHA256_FOREIGN_FUNCTION_NAME_LSIGMA0: &'static str = "zkwasm_sha256_lsigma0";
 pub const SHA256_FOREIGN_FUNCTION_NAME_LSIGMA1: &'static str = "zkwasm_sha256_lsigma1";
+pub const SHA256_FOREIGN_FUNCTION_NAME_RECALCULATE_W: &'static str = "zkwasm_sha256_recalculate_w";
 
 #[derive(Clone, Copy, EnumIter, PartialEq)]
 pub enum Sha256HelperOp {
@@ -21,6 +22,7 @@ pub enum Sha256HelperOp {
     LSigma1 = 4,
     SSigma0 = 5,
     SSigma1 = 6,
+    RecalculateW = 7,
 }
 
 impl From<&String> for Sha256HelperOp {
@@ -32,6 +34,7 @@ impl From<&String> for Sha256HelperOp {
             SHA256_FOREIGN_FUNCTION_NAME_LSIGMA1 => Sha256HelperOp::LSigma1,
             SHA256_FOREIGN_FUNCTION_NAME_SSIGMA0 => Sha256HelperOp::SSigma0,
             SHA256_FOREIGN_FUNCTION_NAME_SSIGMA1 => Sha256HelperOp::SSigma1,
+            SHA256_FOREIGN_FUNCTION_NAME_RECALCULATE_W => Sha256HelperOp::RecalculateW,
             _ => unreachable!(),
         }
     }

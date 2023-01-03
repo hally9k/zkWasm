@@ -3,6 +3,7 @@ mod tests {
     use crate::{
         circuits::ZkWasmCircuitBuilder,
         foreign::{
+            require_helper::register_require_foreign,
             sha256_helper::{runtime::register_sha256_foreign, test::tests::prepare_inputs},
             wasm_input_helper::runtime::register_wasm_input_foreign,
         },
@@ -13,7 +14,7 @@ mod tests {
     use wasmi::ImportsBuilder;
 
     #[test]
-    fn test_sha256() {
+    fn test_sha256_v1() {
         let (public_inputs, private_inputs) = prepare_inputs();
 
         let mut binary = vec![];
@@ -27,6 +28,7 @@ mod tests {
         let mut env = HostEnv::new();
         register_wasm_input_foreign(&mut env, public_inputs.clone(), private_inputs.clone());
         register_sha256_foreign(&mut env);
+        register_require_foreign(&mut env);
         let imports = ImportsBuilder::new().with_resolver("env", &env);
 
         let compiled_module = compiler

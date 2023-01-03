@@ -89,6 +89,7 @@ impl<F: FieldExt> Sha256HelperTableChip<F> {
                             | Sha256HelperOp::LSigma0
                             | Sha256HelperOp::LSigma1 => 0,
                             Sha256HelperOp::Ch | Sha256HelperOp::Maj => 1,
+                            Sha256HelperOp::RecalculateW => todo!(),
                         };
 
                         for (arg_i, arg) in args.iter().enumerate() {
@@ -125,6 +126,9 @@ impl<F: FieldExt> Sha256HelperTableChip<F> {
                             }
                             Sha256HelperOp::SSigma1 => {
                                 self.assign_ssigma1(&mut region, offset, &args)?
+                            }
+                            Sha256HelperOp::RecalculateW => {
+                                todo!()
                             }
                         }
                     } else {

@@ -35,7 +35,7 @@ pub(crate) mod tests {
     }
 
     #[test]
-    fn test_sha256() {
+    fn test_sha256_v1() {
         let (public_inputs, private_inputs) = prepare_inputs();
 
         let mut wasm = vec![];
@@ -48,6 +48,44 @@ pub(crate) mod tests {
         let mut env = HostEnv::new();
         register_sha256_foreign(&mut env);
         register_wasm_input_foreign(&mut env, public_inputs.clone(), private_inputs.clone());
+        register_require_foreign(&mut env);
+
+        let imports = ImportsBuilder::new().with_resolver("env", &env);
+        let compiled_module = compiler
+            .compile(&wasm, &imports, &env.function_plugin_lookup)
+            .unwrap();
+        let execution_log = compiler
+            .run(
+                &mut env,
+                &compiled_module,
+                "sha256_digest",
+                public_inputs.clone(),
+                private_inputs,
+            )
+            .unwrap();
+        run_test_circuit::<Fp>(
+            compiled_module.tables,
+            execution_log.tables,
+            public_inputs.into_iter().map(|v| Fp::from(v)).collect(),
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn test_sha256_recalculate_w() {
+        let (public_inputs, private_inputs) = prepare_inputs();
+
+        let mut wasm = vec![];
+
+        let path = PathBuf::from("wasm/sha256_recalculate_w.wasm");
+        let mut f = File::open(path).unwrap();
+        f.read_to_end(&mut wasm).unwrap();
+
+        let compiler = WasmInterpreter::new();
+        let mut env = HostEnv::new();
+        register_sha256_foreign(&mut env);
+        register_wasm_input_foreign(&mut env, public_inputs.clone(), private_inputs.clone());
+        register_require_foreign(&mut env);
 
         let imports = ImportsBuilder::new().with_resolver("env", &env);
         let compiled_module = compiler
