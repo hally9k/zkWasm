@@ -15,6 +15,7 @@ mod test_binary_search;
 mod test_fibonacci;
 mod test_sha256;
 mod test_start;
+mod test_fibonacci_v2;
 
 fn test_circuit(
     mut env: HostEnv,
